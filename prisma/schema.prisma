@@ -1,0 +1,165 @@
+// Prisma schema for KOBPAY
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+  DELETED
+}
+
+model User {
+  id          String       @id @default(uuid())
+  phone       String       @unique
+  email       String?
+  name        String?
+  profileImageUrl String?
+  status      UserStatus   @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  deletedAt   DateTime?
+
+  security    Security?
+  wallet      Wallet?
+  bankAccounts BankAccount[]
+  transactions Transaction[]
+  exchangeTrades ExchangeTrade[]
+  beneficiaries Beneficiary[]
+}
+
+model Security {
+  userId        String   @id
+  user          User     @relation(fields: [userId], references: [id])
+  passwordHash  String?
+  pinHash       String?
+  biometricsEnabled Boolean @default(false)
+  failedAttempts Int     @default(0)
+  lockedUntil   DateTime?
+}
+
+model Wallet {
+  userId                    String   @id
+  user                      User     @relation(fields: [userId], references: [id])
+  balanceKobo               Int      @default(0)
+  currency                  String   @default("NGN")
+  virtualAccountNumber      String?
+  virtualAccountBankName    String?
+  virtualAccountAccountName String?
+  flutterwaveCustomerId     String?
+  flutterwaveRef            String?
+  paystackCustomerId        String?
+  paystackCustomerCode      String?
+  paystackDedicatedAccountId String?
+  updatedAt                 DateTime @updatedAt
+}
+
+model BankAccount {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id])
+  bankCode            String
+  bankName            String
+  accountNumber       String
+  accountNameResolved String?
+  createdAt           DateTime @default(now())
+
+  @@unique([userId, bankCode, accountNumber])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String
+  category    String
+  amountKobo  Int
+  feeKobo     Int      @default(0)
+  totalKobo   Int
+  provider    String
+  providerRef String?
+  status      String
+  metaJson    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@unique([provider, providerRef])
+}
+
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  provider    String
+  eventType   String
+  reference   String
+  payloadJson Json
+  processedAt DateTime?
+  status      String
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, reference])
+}
+
+model Beneficiary {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  category      String
+  label         String?
+  network       String?
+  phone         String?
+  provider      String?
+  serviceCode   String?
+  smartNo       String?
+  planVariation String?
+  meterNo       String?
+  meterType     String?
+  dedupeKey     String
+  isActive      Boolean  @default(true)
+  lastUsedAt    DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, category, isActive])
+  @@unique([userId, category, dedupeKey])
+}
+
+model ExchangeTrade {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
+
+  fromCurrency       String
+  toCurrency         String
+  fromAmountMinor    Int
+  toAmountMinor      Int
+  rate               Float
+  rateSource         String
+
+  status             String
+  expiresAt          DateTime
+  paidAt             DateTime?
+  paymentReceivedAt  DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+
+  receivingDetailsJson Json
+  payToDetailsJson     Json
+
+  receiptFileUrl     String?
+  receiptFileName    String?
+  receiptMimeType    String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+}

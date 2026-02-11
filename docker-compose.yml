@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    container_name: kobpay-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: kobpay
+      POSTGRES_PASSWORD: kobpay_password
+      POSTGRES_DB: kobpay
+    volumes:
+      - kobpay_pgdata:/var/lib/postgresql/data
+volumes:
+  kobpay_pgdata:

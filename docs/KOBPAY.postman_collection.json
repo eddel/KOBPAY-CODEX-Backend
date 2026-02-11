@@ -1,0 +1,493 @@
+{
+  "info": {
+    "name": "KOBPAY API",
+    "_postman_id": "e1b6c9ef-3c1b-4d7b-8a57-7a9a5a8b1f1d",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for the KOBPAY API."
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Request Signup OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+2348000000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/otp/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "otp", "request"]
+            }
+          }
+        },
+        {
+          "name": "Verify Signup OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+2348000000000\",\n  \"code\": \"123456\",\n  \"name\": \"Demo User\",\n  \"password\": \"Secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/otp/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "otp", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+2348000000000\",\n  \"password\": \"Secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            }
+          }
+        },
+        {
+          "name": "Set PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me/pin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "pin"]
+            }
+          }
+        },
+        {
+          "name": "Change PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPin\": \"1234\",\n  \"newPin\": \"5678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me/pin/change",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "pin", "change"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "Get Wallet",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet"]
+            }
+          }
+        },
+        {
+          "name": "Init Wallet Funding",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000,\n  \"email\": \"demo@kobpay.local\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/fund/initialize",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "fund", "initialize"]
+            }
+          }
+        },
+        {
+          "name": "Verify Wallet Funding",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txRef\": \"wf_<userId>_1700000000000\",\n  \"amount\": 1000,\n  \"currency\": \"NGN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/fund/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "fund", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Create Funding VA",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000,\n  \"email\": \"demo@kobpay.local\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/virtual-account",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "virtual-account"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billers",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/billers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billers"]
+            }
+          }
+        },
+        {
+          "name": "List Billers by Category",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/billers?category=airtime",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billers"],
+              "query": [{ "key": "category", "value": "airtime" }]
+            }
+          }
+        },
+        {
+          "name": "Get Bill Items",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/billers/{{billerCode}}/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billers", "{{billerCode}}", "plans"]
+            }
+          }
+        },
+        {
+          "name": "Validate Customer",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/billers/validate?billerCode={{billerCode}}&itemCode={{itemCode}}&customer={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billers", "validate"],
+              "query": [
+                { "key": "billerCode", "value": "{{billerCode}}" },
+                { "key": "itemCode", "value": "{{itemCode}}" },
+                { "key": "customer", "value": "{{customerId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pay Bill",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"billerCode\": \"{{billerCode}}\",\n  \"itemCode\": \"{{itemCode}}\",\n  \"customerId\": \"{{customerId}}\",\n  \"amount\": 1000,\n  \"category\": \"airtime\",\n  \"validate\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/billers/pay",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billers", "pay"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Giftcards",
+      "item": [
+        {
+          "name": "Purchase Giftcard",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000,\n  \"currency\": \"NGN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/giftcards/purchase",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "giftcards", "purchase"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Banks",
+      "item": [
+        {
+          "name": "List Banks",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/banks?country=NG",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "banks"],
+              "query": [{ "key": "country", "value": "NG" }]
+            }
+          }
+        },
+        {
+          "name": "Resolve Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bankCode\": \"{{bankCode}}\",\n  \"accountNumber\": \"{{accountNumber}}\",\n  \"save\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/banks/resolve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "banks", "resolve"]
+            }
+          }
+        },
+        {
+          "name": "Saved Accounts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/banks/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "banks", "accounts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Withdrawals",
+      "item": [
+        {
+          "name": "Create Withdrawal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500,\n  \"bankCode\": \"{{bankCode}}\",\n  \"accountNumber\": \"{{accountNumber}}\",\n  \"resolve\": true,\n  \"saveBeneficiary\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/withdrawals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "withdrawals"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "{{transactionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Receipt",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/{{transactionId}}/receipt",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "{{transactionId}}", "receipt"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Transaction",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/{{transactionId}}/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "{{transactionId}}", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Flutterwave Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "flutterwave-signature", "value": "{{flwSignature}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"charge.completed\",\n  \"data\": {\n    \"id\": 123456789,\n    \"tx_ref\": \"va_<userId>_1700000000000\",\n    \"flw_ref\": \"FLW-MOCK-REF\",\n    \"status\": \"successful\",\n    \"amount\": 2500,\n    \"currency\": \"NGN\",\n    \"app_fee\": 20,\n    \"meta\": {\"userId\": \"<userId>\"}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/flutterwave",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "flutterwave"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "billerCode", "value": "" },
+    { "key": "itemCode", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "bankCode", "value": "" },
+    { "key": "accountNumber", "value": "" },
+    { "key": "transactionId", "value": "" },
+    { "key": "idempotencyKey", "value": "" },
+    { "key": "flwSignature", "value": "" }
+  ]
+}

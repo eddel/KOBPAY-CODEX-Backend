@@ -1,0 +1,19 @@
+# Node
+node_modules/
+dist/
+.env
+
+# Uploads
+uploads/
+
+# Prisma
+prisma/.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
