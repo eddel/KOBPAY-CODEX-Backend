@@ -697,20 +697,6 @@ router.post(
       throw new AppError(401, "Invalid PIN", "PIN_INVALID");
     }
 
-    const verifyResult = await verifyCableAccount(
-      {
-        service: body.provider,
-        smartNo: normalizedSmartNo,
-        variation: plan.variation
-      },
-      { requestId: req.requestId }
-    );
-    if (!verifyResult.ok || !verifyResult.customerName) {
-      throw new AppError(400, "Smartcard not verified", "CABLE_NOT_VERIFIED", {
-        status: verifyResult.status
-      });
-    }
-
     const amountNgn = plan.priceNgn;
     const amountKobo = Math.round(amountNgn * 100);
     const wallet = await getOrCreateWallet(user.id);
@@ -913,6 +899,20 @@ router.post(
     const pinOk = await bcrypt.compare(body.pin, security.pinHash);
     if (!pinOk) {
       throw new AppError(401, "Invalid PIN", "PIN_INVALID");
+    }
+
+    const verifyResult = await verifyCableAccount(
+      {
+        service: body.provider,
+        smartNo: normalizedSmartNo,
+        variation: plan.variation
+      },
+      { requestId: req.requestId }
+    );
+    if (!verifyResult.ok || !verifyResult.customerName) {
+      throw new AppError(400, "Smartcard not verified", "CABLE_NOT_VERIFIED", {
+        status: verifyResult.status
+      });
     }
 
     const amountNgn = plan.priceNgn;
