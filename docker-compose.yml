@@ -11,5 +11,19 @@ services:
       POSTGRES_DB: kobpay
     volumes:
       - kobpay_pgdata:/var/lib/postgresql/data
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kobpay-backend
+    working_dir: /app
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://kobpay:kobpay_password@postgres:5432/kobpay?schema=public
+    depends_on:
+      - postgres
 volumes:
   kobpay_pgdata:
