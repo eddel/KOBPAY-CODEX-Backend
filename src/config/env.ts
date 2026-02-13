@@ -48,6 +48,7 @@ const envSchema = z.object({
   VTU_HTTP_TIMEOUT_MS: z.coerce.number().default(15000),
   DATA_SUBSCRIPTION_FEE_NGN: z.coerce.number().default(0),
   CABLE_SUBSCRIPTION_FEE_NGN: z.coerce.number().default(0),
+  ELECTRICITY_SUBSCRIPTION_FEE_NGN: z.coerce.number().default(0),
   PAYSTACK_BASE_URL: z.string().default("https://api.paystack.co"),
   PAYSTACK_SECRET_KEY: z.string().default(""),
   PAYSTACK_WEBHOOK_SECRET: z.string().default(""),

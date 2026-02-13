@@ -89,6 +89,10 @@ const sumNgn = (amountNgn: number, feeNgn: number) =>
 
 const dataSubscriptionFeeNgn = Math.max(0, env.DATA_SUBSCRIPTION_FEE_NGN ?? 0);
 const cableSubscriptionFeeNgn = Math.max(0, env.CABLE_SUBSCRIPTION_FEE_NGN ?? 0);
+const electricitySubscriptionFeeNgn = Math.max(
+  0,
+  env.ELECTRICITY_SUBSCRIPTION_FEE_NGN ?? 0
+);
 
 const normalizeBettingProvider = (input: string) => {
   const key = input.trim().toLowerCase();
@@ -1164,12 +1168,14 @@ router.post(
       });
     }
 
-    const amountNgn = body.amountNgn;
-    if (amountNgn < 900) {
+    const baseAmountNgn = body.amountNgn;
+    if (baseAmountNgn < 900) {
       throw new AppError(400, "Minimum amount is NGN 900", "MIN_AMOUNT");
     }
 
-    const amountKobo = Math.round(amountNgn * 100);
+    const feeNgn = electricitySubscriptionFeeNgn;
+    const amountNgn = sumNgn(baseAmountNgn, feeNgn);
+    const amountKobo = toKobo(amountNgn);
     const wallet = await getOrCreateWallet(user.id);
     if (wallet.balanceKobo < amountKobo) {
       throw new AppError(400, "Insufficient wallet balance", "INSUFFICIENT_FUNDS");
@@ -1193,7 +1199,7 @@ router.post(
               serviceCode: meta?.serviceCode ?? body.serviceCode,
               meterNo: meta?.meterNo ?? body.meterNo,
               meterType: meta?.meterType ?? body.meterType,
-              amountNgn: meta?.amountNgn ?? body.amountNgn,
+              amountNgn: meta?.amountNgn ?? baseAmountNgn,
               customerName: meta?.customerName ?? null
             })
           : null);
@@ -1234,8 +1240,13 @@ router.post(
             serviceCode: body.serviceCode,
             meterNo: normalizedMeter,
             meterType: body.meterType,
-            amountNgn,
+            amountNgn: baseAmountNgn,
             customerName: verifyResult.customerName ?? null,
+            pricing: {
+              baseAmountNgn,
+              feeNgn,
+              totalAmountNgn: amountNgn
+            },
             reference
           }
         }
@@ -1251,7 +1262,7 @@ router.post(
           service: body.serviceCode,
           meterNo: normalizedMeter,
           meterType: body.meterType,
-          amount: amountNgn,
+          amount: baseAmountNgn,
           ref: reference,
           webhookURL: env.VTU_WEBHOOK_URL || undefined
         },
@@ -1265,7 +1276,7 @@ router.post(
         serviceCode: body.serviceCode,
         meterNo: normalizedMeter,
         meterType: body.meterType,
-        amountNgn,
+        amountNgn: baseAmountNgn,
         customerName: verifyResult.customerName ?? null
       });
 
