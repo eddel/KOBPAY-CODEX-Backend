@@ -82,6 +82,14 @@ const parseNumber = (value: unknown) => {
   return null;
 };
 
+const toKobo = (amountNgn: number) => Math.round(amountNgn * 100);
+
+const sumNgn = (amountNgn: number, feeNgn: number) =>
+  Number(((toKobo(amountNgn) + toKobo(feeNgn)) / 100).toFixed(2));
+
+const dataSubscriptionFeeNgn = Math.max(0, env.DATA_SUBSCRIPTION_FEE_NGN ?? 0);
+const cableSubscriptionFeeNgn = Math.max(0, env.CABLE_SUBSCRIPTION_FEE_NGN ?? 0);
+
 const normalizeBettingProvider = (input: string) => {
   const key = input.trim().toLowerCase();
   const alias = vtuBettingProviderAliases[key];
@@ -112,6 +120,8 @@ type DataPlanEntry = {
   dataPlan: string;
   sizeLabel: string;
   validityLabel: string;
+  basePriceNgn: number;
+  feeNgn: number;
   priceNgn: number;
   displayName: string;
 };
@@ -143,7 +153,9 @@ const buildDataCatalog = () => {
       dataPlan: plan.dataPlan,
       sizeLabel: plan.sizeLabel,
       validityLabel: plan.validityLabel,
-      priceNgn: plan.priceNgn,
+      basePriceNgn: plan.priceNgn,
+      feeNgn: dataSubscriptionFeeNgn,
+      priceNgn: sumNgn(plan.priceNgn, dataSubscriptionFeeNgn),
       displayName: plan.displayName
     };
 
@@ -174,6 +186,8 @@ type CablePlanEntry = {
   provider: "gotv" | "dstv" | "startimes" | "showmax";
   variation: string;
   name: string;
+  basePriceNgn: number;
+  feeNgn: number;
   priceNgn: number;
   description?: string;
   displayName: string;
@@ -200,8 +214,11 @@ const buildCableCatalog = () => {
     const providerPlans = byProvider.get(plan.provider)!;
     if (providerPlans.has(plan.variation)) return;
 
+    const basePriceNgn = plan.priceNgn;
+    const feeNgn = cableSubscriptionFeeNgn;
+    const priceNgn = sumNgn(basePriceNgn, feeNgn);
     const label = plan.description ? `${plan.name} (${plan.description})` : plan.name;
-    const displayName = `${cableProviderLabels[plan.provider]} ${label} - NGN ${plan.priceNgn.toLocaleString(
+    const displayName = `${cableProviderLabels[plan.provider]} ${label} - NGN ${priceNgn.toLocaleString(
       "en-NG"
     )}`;
 
@@ -210,7 +227,9 @@ const buildCableCatalog = () => {
       provider: plan.provider,
       variation: plan.variation,
       name: plan.name,
-      priceNgn: plan.priceNgn,
+      basePriceNgn,
+      feeNgn,
+      priceNgn,
       description: plan.description,
       displayName
     };
@@ -675,7 +694,7 @@ router.post(
     if (plan.network !== body.network) {
       throw new AppError(400, "Selected plan does not match network", "INVALID_PLAN_NETWORK");
     }
-    if (!plan.priceNgn || plan.priceNgn <= 0) {
+    if (!plan.basePriceNgn || plan.basePriceNgn <= 0) {
       throw new AppError(400, "Selected plan has invalid price", "INVALID_PLAN_PRICE");
     }
 
@@ -697,8 +716,10 @@ router.post(
       throw new AppError(401, "Invalid PIN", "PIN_INVALID");
     }
 
+    const baseAmountNgn = plan.basePriceNgn;
+    const feeNgn = plan.feeNgn;
     const amountNgn = plan.priceNgn;
-    const amountKobo = Math.round(amountNgn * 100);
+    const amountKobo = toKobo(amountNgn);
     const wallet = await getOrCreateWallet(user.id);
     if (wallet.balanceKobo < amountKobo) {
       throw new AppError(400, "Insufficient wallet balance", "INSUFFICIENT_FUNDS");
@@ -753,8 +774,15 @@ router.post(
               dataPlan: plan.dataPlan,
               sizeLabel: plan.sizeLabel,
               validityLabel: plan.validityLabel,
+              basePriceNgn: plan.basePriceNgn,
+              feeNgn: plan.feeNgn,
               priceNgn: plan.priceNgn,
               displayName: plan.displayName
+            },
+            pricing: {
+              baseAmountNgn,
+              feeNgn,
+              totalAmountNgn: amountNgn
             },
             reference
           }
@@ -774,7 +802,7 @@ router.post(
           mobileNumber: normalizedPhone,
           dataPlan: plan.dataPlan,
           ref: reference,
-          maxamount: String(amountNgn),
+          maxamount: String(baseAmountNgn),
           webhookURL: env.VTU_WEBHOOK_URL || undefined
         },
         { requestId: req.requestId }
@@ -879,7 +907,7 @@ router.post(
     if (plan.provider !== body.provider) {
       throw new AppError(400, "Selected plan does not match provider", "INVALID_PLAN_PROVIDER");
     }
-    if (!plan.priceNgn || plan.priceNgn <= 0) {
+    if (!plan.basePriceNgn || plan.basePriceNgn <= 0) {
       throw new AppError(400, "Selected plan has invalid price", "INVALID_PLAN_PRICE");
     }
 
@@ -915,8 +943,10 @@ router.post(
       });
     }
 
+    const baseAmountNgn = plan.basePriceNgn;
+    const feeNgn = plan.feeNgn;
     const amountNgn = plan.priceNgn;
-    const amountKobo = Math.round(amountNgn * 100);
+    const amountKobo = toKobo(amountNgn);
     const wallet = await getOrCreateWallet(user.id);
     if (wallet.balanceKobo < amountKobo) {
       throw new AppError(400, "Insufficient wallet balance", "INSUFFICIENT_FUNDS");
@@ -970,8 +1000,15 @@ router.post(
             plan: {
               variation: plan.variation,
               name: plan.name,
+              basePriceNgn: plan.basePriceNgn,
+              feeNgn: plan.feeNgn,
               priceNgn: plan.priceNgn,
               description: plan.description
+            },
+            pricing: {
+              baseAmountNgn,
+              feeNgn,
+              totalAmountNgn: amountNgn
             },
             reference
           }
@@ -989,7 +1026,7 @@ router.post(
           smartNo: normalizedSmartNo,
           variation: plan.variation,
           ref: reference,
-          maxamount: String(amountNgn),
+          maxamount: String(baseAmountNgn),
           webhookURL: env.VTU_WEBHOOK_URL || undefined
         },
         { requestId: req.requestId }

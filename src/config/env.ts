@@ -46,6 +46,8 @@ const envSchema = z.object({
   VTU_DOCS_BASE_URL: z.string().default("https://vtuafrica.com.ng/api"),
   VTU_CATALOG_CACHE_SECONDS: z.coerce.number().default(3600),
   VTU_HTTP_TIMEOUT_MS: z.coerce.number().default(15000),
+  DATA_SUBSCRIPTION_FEE_NGN: z.coerce.number().default(0),
+  CABLE_SUBSCRIPTION_FEE_NGN: z.coerce.number().default(0),
   PAYSTACK_BASE_URL: z.string().default("https://api.paystack.co"),
   PAYSTACK_SECRET_KEY: z.string().default(""),
   PAYSTACK_WEBHOOK_SECRET: z.string().default(""),
