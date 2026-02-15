@@ -18,11 +18,8 @@ const passwordSchema = z
 const fullNameSchema = z
   .string()
   .trim()
-  .min(3)
-  .max(100)
-  .refine((value) => value.split(/\s+/).length >= 2, {
-    message: "First and last name required"
-  });
+  .min(1)
+  .max(100);
 
 const normalizePhone = (phone: string) => phone.trim();
 
