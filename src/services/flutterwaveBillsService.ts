@@ -1,6 +1,6 @@
-import { env } from "../config/env";
-import { AppError } from "../errors";
-import { logDebug, logError } from "../utils/logger";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
+import { logDebug, logError } from "../utils/logger.js";
 
 type FlutterwaveResponse<T> = {
   status?: string;
@@ -184,3 +184,4 @@ export const getBillStatus = async (reference: string, ctx?: RequestContext) => 
   );
   return body.data ?? {};
 };
+

@@ -1,9 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
 import nodemailer from "nodemailer";
-import { env } from "../config/env";
-import { AppError } from "../errors";
-import { logInfo, logWarn } from "../utils/logger";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
+import { logInfo, logWarn } from "../utils/logger.js";
 
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
 
@@ -167,3 +167,4 @@ export const sendSupportContactEmail = async (input: {
 
   logInfo("support_contact_email_sent", { userId: input.user.id });
 };
+

@@ -3,14 +3,14 @@ import fs from "fs/promises";
 import { Router } from "express";
 import { z } from "zod";
 import multer from "multer";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError, notFound } from "../errors";
-import { fxRates, getFxRate } from "../config/fxRates";
-import { exchangePayTo } from "../config/exchangePayTo";
-import { env } from "../config/env";
-import { sendExchangeReceiptEmail } from "../services/emailService";
-import { logWarn } from "../utils/logger";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError, notFound } from "../errors.js";
+import { fxRates, getFxRate } from "../config/fxRates.js";
+import { exchangePayTo } from "../config/exchangePayTo.js";
+import { env } from "../config/env.js";
+import { sendExchangeReceiptEmail } from "../services/emailService.js";
+import { logWarn } from "../utils/logger.js";
 
 const router = Router();
 
@@ -515,3 +515,4 @@ router.get(
 );
 
 export default router;
+

@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError, notFound } from "../errors";
-import { getBillStatus, toBillStatus } from "../services/vtuAfricaBillsService";
-import { logInfo, logWarn } from "../utils/logger";
-import { asJson } from "../utils/prismaJson";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError, notFound } from "../errors.js";
+import { getBillStatus, toBillStatus } from "../services/vtuAfricaBillsService.js";
+import { logInfo, logWarn } from "../utils/logger.js";
+import { asJson } from "../utils/prismaJson.js";
 
 const router = Router();
 
@@ -212,3 +212,4 @@ router.post(
 );
 
 export default router;
+

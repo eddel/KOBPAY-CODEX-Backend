@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { z } from "zod";
 import bcrypt from "bcrypt";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { requestOtp, verifyOtp } from "../services/otpService";
-import { issueTokens, verifyRefreshToken } from "../services/tokenService";
-import { AppError, forbidden, notFound } from "../errors";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { requestOtp, verifyOtp } from "../services/otpService.js";
+import { issueTokens, verifyRefreshToken } from "../services/tokenService.js";
+import { AppError, forbidden, notFound } from "../errors.js";
 
 const router = Router();
 
@@ -184,3 +184,4 @@ router.post(
 );
 
 export default router;
+

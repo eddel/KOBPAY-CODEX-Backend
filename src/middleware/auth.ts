@@ -1,6 +1,6 @@
 import { type Request, type Response, type NextFunction } from "express";
-import { unauthorized } from "../errors";
-import { verifyAccessToken } from "../services/tokenService";
+import { unauthorized } from "../errors.js";
+import { verifyAccessToken } from "../services/tokenService.js";
 
 const extractToken = (req: Request) => {
   const header = req.headers.authorization;
@@ -26,3 +26,4 @@ export const authMiddleware = (req: Request, _res: Response, next: NextFunction)
   req.auth = { userId: payload.sub, phone: payload.phone };
   return next();
 };
+

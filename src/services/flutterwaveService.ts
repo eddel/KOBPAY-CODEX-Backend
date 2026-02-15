@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import { env } from "../config/env";
-import { AppError } from "../errors";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
 
 type FlutterwaveResponse<T> = {
   status?: string;
@@ -307,3 +307,4 @@ export const verifyTransactionByReference = async (
 
   return body.data ?? {};
 };
+

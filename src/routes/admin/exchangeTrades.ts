@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../../db";
-import { asyncHandler } from "../../utils/asyncHandler";
-import { AppError, notFound } from "../../errors";
-import { env } from "../../config/env";
+import { prisma } from "../../db.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { AppError, notFound } from "../../errors.js";
+import { env } from "../../config/env.js";
 
 const router = Router();
 
@@ -175,3 +175,4 @@ router.post(
 );
 
 export default router;
+

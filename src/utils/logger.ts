@@ -1,4 +1,4 @@
-import { env } from "../config/env";
+import { env } from "../config/env.js";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -42,3 +42,4 @@ export const logError = (message: string, meta?: Record<string, unknown>) => {
 };
 
 export const shouldLogDebug = () => isDebug;
+

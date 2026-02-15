@@ -2,10 +2,10 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError } from "../errors";
-import { env } from "../config/env";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError } from "../errors.js";
+import { env } from "../config/env.js";
 import {
   purchaseAirtime,
   purchaseData,
@@ -15,18 +15,18 @@ import {
   fundBetAccount,
   verifyCableAccount,
   verifyElectricityAccount
-} from "../services/vtuAfricaService";
-import { vtuDataPlans } from "../data/vtuDataPlans";
-import { vtuCablePlans } from "../data/vtuCablePlans";
-import { vtuElectricProviders } from "../data/vtuElectricProviders";
-import { vtuBettingProviders, vtuBettingProviderAliases } from "../data/vtuBettingProviders";
+} from "../services/vtuAfricaService.js";
+import { vtuDataPlans } from "../data/vtuDataPlans.js";
+import { vtuCablePlans } from "../data/vtuCablePlans.js";
+import { vtuElectricProviders } from "../data/vtuElectricProviders.js";
+import { vtuBettingProviders, vtuBettingProviderAliases } from "../data/vtuBettingProviders.js";
 import {
   type BeneficiaryCategory,
   buildBeneficiaryKey,
   buildBeneficiaryLabelSuggestion,
   normalizePayload
-} from "../utils/beneficiaries";
-import { asJson } from "../utils/prismaJson";
+} from "../utils/beneficiaries.js";
+import { asJson } from "../utils/prismaJson.js";
 
 const router = Router();
 
@@ -1661,3 +1661,4 @@ router.post(
 );
 
 export default router;
+

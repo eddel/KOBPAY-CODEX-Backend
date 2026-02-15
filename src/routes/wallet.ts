@@ -1,19 +1,19 @@
 import { Router } from "express";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError, notFound } from "../errors";
-import { env } from "../config/env";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError, notFound } from "../errors.js";
+import { env } from "../config/env.js";
 import {
   createPaymentLink,
   verifyTransactionByReference
-} from "../services/flutterwaveService";
+} from "../services/flutterwaveService.js";
 import {
   createDedicatedAccount,
   createPaystackCustomer
-} from "../services/paystackService";
-import { asJson } from "../utils/prismaJson";
+} from "../services/paystackService.js";
+import { asJson } from "../utils/prismaJson.js";
 
 const router = Router();
 
@@ -429,3 +429,4 @@ router.post(
 );
 
 export default router;
+

@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { ZodError } from "zod";
-import { AppError } from "../errors";
-import { env } from "../config/env";
+import { AppError } from "../errors.js";
+import { env } from "../config/env.js";
 
 export const errorHandler = (
   err: unknown,
@@ -62,3 +62,4 @@ export const errorHandler = (
     }
   });
 };
+

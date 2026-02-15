@@ -1,11 +1,11 @@
 import crypto from "crypto";
 import { Router } from "express";
 import { Prisma } from "@prisma/client";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { env } from "../config/env";
-import { AppError } from "../errors";
-import { logInfo, logWarn } from "../utils/logger";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
+import { logInfo, logWarn } from "../utils/logger.js";
 
 const router = Router();
 
@@ -748,3 +748,4 @@ router.post(
 );
 
 export default router;
+

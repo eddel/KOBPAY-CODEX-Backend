@@ -1,6 +1,6 @@
-import { env } from "../config/env";
-import { AppError } from "../errors";
-import { isFlutterwaveConfigured } from "./flutterwaveService";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
+import { isFlutterwaveConfigured } from "./flutterwaveService.js";
 
 type FlutterwaveResponse<T> = {
   status?: string;
@@ -130,3 +130,4 @@ export const createTransfer = async (input: TransferInput) => {
 
   return body.data ?? {};
 };
+

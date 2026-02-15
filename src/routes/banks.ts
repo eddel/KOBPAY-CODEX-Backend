@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError } from "../errors";
-import { env } from "../config/env";
-import { listBanks, resolveBankAccount } from "../services/flutterwaveTransfersService";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError } from "../errors.js";
+import { env } from "../config/env.js";
+import { listBanks, resolveBankAccount } from "../services/flutterwaveTransfersService.js";
 
 const router = Router();
 
@@ -89,3 +89,4 @@ router.post(
 );
 
 export default router;
+

@@ -1,12 +1,12 @@
 import crypto from "crypto";
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError } from "../errors";
-import { env } from "../config/env";
-import { createReeplayCard } from "../services/reeplayService";
-import { asJson } from "../utils/prismaJson";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError } from "../errors.js";
+import { env } from "../config/env.js";
+import { createReeplayCard } from "../services/reeplayService.js";
+import { asJson } from "../utils/prismaJson.js";
 
 const router = Router();
 
@@ -193,3 +193,4 @@ router.post(
 );
 
 export default router;
+

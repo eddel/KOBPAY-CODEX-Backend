@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
 import bcrypt from "bcrypt";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError, notFound } from "../errors";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError, notFound } from "../errors.js";
 
 const router = Router();
 
@@ -245,3 +245,4 @@ router.post(
 );
 
 export default router;
+

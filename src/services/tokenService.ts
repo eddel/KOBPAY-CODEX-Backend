@@ -1,6 +1,6 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import { env } from "../config/env";
-import { AppError } from "../errors";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
 
 type TokenType = "access" | "refresh";
 
@@ -93,3 +93,4 @@ export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
     throw new AppError(401, "Invalid or expired refresh token", "AUTH_INVALID", err);
   }
 };
+

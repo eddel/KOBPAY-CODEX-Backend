@@ -1,6 +1,6 @@
-import { env } from "../config/env";
-import { AppError } from "../errors";
-import { logDebug, logError } from "../utils/logger";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
+import { logDebug, logError } from "../utils/logger.js";
 
 type RequestContext = {
   requestId?: string;
@@ -542,3 +542,4 @@ export const fundBetAccount = async (
 
   return body ?? {};
 };
+

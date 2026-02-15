@@ -1,5 +1,5 @@
-import { env } from "../config/env";
-import { AppError } from "../errors";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
 
 type ReeplayAuth = {
   token: string;
@@ -139,3 +139,4 @@ export const createReeplayCard = async (input: CreateCardInput) => {
 
   return body?.data ?? body;
 };
+

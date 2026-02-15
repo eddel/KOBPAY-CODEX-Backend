@@ -1,5 +1,5 @@
-import { env } from "../config/env";
-import { AppError } from "../errors";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
 
 const OTP_TTL_SECONDS = 300;
 
@@ -241,3 +241,4 @@ export const verifyOtp = (phoneRaw: string, code: string) => {
   otpStore.delete(phone);
   return true;
 };
+

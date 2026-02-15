@@ -1,7 +1,7 @@
 import crypto from "crypto";
-import { env } from "../config/env";
-import { AppError } from "../errors";
-import { logDebug, logError, logWarn } from "../utils/logger";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
+import { logDebug, logError, logWarn } from "../utils/logger.js";
 
 type RequestContext = {
   requestId?: string;
@@ -813,3 +813,4 @@ export const getBillStatus = async (reference: string, ctx?: RequestContext) => 
 export const toBillStatus = (body: VtuResponse<any>) => mapVtuStatus(body);
 
 export const buildReference = () => `vtu_${crypto.randomUUID()}`;
+

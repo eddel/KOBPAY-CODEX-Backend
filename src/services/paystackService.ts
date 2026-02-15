@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import { env } from "../config/env";
-import { AppError } from "../errors";
+import { env } from "../config/env.js";
+import { AppError } from "../errors.js";
 
 type PaystackResponse<T> = {
   status?: boolean;
@@ -181,3 +181,4 @@ export const createDedicatedAccount = async (input: {
     raw: data
   };
 };
+

@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError, notFound } from "../errors";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError, notFound } from "../errors.js";
 import {
   type BeneficiaryCategory,
   buildBeneficiaryKey,
   buildBeneficiaryLabelSuggestion,
   normalizePayload
-} from "../utils/beneficiaries";
+} from "../utils/beneficiaries.js";
 
 const router = Router();
 
@@ -217,3 +217,4 @@ router.delete(
 );
 
 export default router;
+

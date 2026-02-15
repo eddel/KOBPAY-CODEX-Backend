@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import { Router } from "express";
 import { z } from "zod";
-import { prisma } from "../db";
-import { asyncHandler } from "../utils/asyncHandler";
-import { AppError } from "../errors";
-import { env } from "../config/env";
+import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError } from "../errors.js";
+import { env } from "../config/env.js";
 import {
   createBillPayment,
   getBillCategories,
@@ -13,9 +13,9 @@ import {
   validateBillCustomer,
   toBillStatus,
   buildReference
-} from "../services/vtuAfricaBillsService";
-import { logInfo, logWarn } from "../utils/logger";
-import { asJson } from "../utils/prismaJson";
+} from "../services/vtuAfricaBillsService.js";
+import { logInfo, logWarn } from "../utils/logger.js";
+import { asJson } from "../utils/prismaJson.js";
 
 const router = Router();
 
@@ -406,3 +406,4 @@ router.post(
 );
 
 export default router;
+
