@@ -46,6 +46,15 @@ export type BankInfo = {
   id?: string | number;
 };
 
+export type BankAccountResolution = {
+  account_number?: string;
+  account_name?: string;
+  accountNumber?: string;
+  accountName?: string;
+  bank_name?: string;
+  name?: string;
+};
+
 export const listBanks = async (country: string) => {
   if (!isFlutterwaveConfigured()) {
     return [
@@ -57,7 +66,10 @@ export const listBanks = async (country: string) => {
   return body.data ?? [];
 };
 
-export const resolveBankAccount = async (accountNumber: string, bankCode: string) => {
+export const resolveBankAccount = async (
+  accountNumber: string,
+  bankCode: string
+): Promise<BankAccountResolution | null> => {
   if (!isFlutterwaveConfigured()) {
     return {
       account_number: accountNumber,
@@ -65,10 +77,7 @@ export const resolveBankAccount = async (accountNumber: string, bankCode: string
     };
   }
 
-  const body = await flwRequest<{
-    account_number: string;
-    account_name: string;
-  }>(`/v3/accounts/resolve`, {
+  const body = await flwRequest<BankAccountResolution>(`/v3/accounts/resolve`, {
     method: "POST",
     body: JSON.stringify({
       account_number: accountNumber,
@@ -76,7 +85,7 @@ export const resolveBankAccount = async (accountNumber: string, bankCode: string
     })
   });
 
-  return body.data;
+  return body.data ?? null;
 };
 
 type TransferInput = {

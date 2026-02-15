@@ -15,6 +15,7 @@ import {
   buildReference
 } from "../services/vtuAfricaBillsService";
 import { logInfo, logWarn } from "../utils/logger";
+import { asJson } from "../utils/prismaJson";
 
 const router = Router();
 
@@ -302,7 +303,7 @@ router.post(
           provider: "vtuafrica",
           providerRef: reference,
           status: "pending",
-          metaJson: {
+          metaJson: asJson({
             billerCode: body.billerCode,
             itemCode: body.itemCode,
             customerId: body.customerId,
@@ -312,7 +313,7 @@ router.post(
             category: body.category ?? null,
             item: itemMeta ?? null,
             type: null
-          }
+          })
         }
       });
 
@@ -341,13 +342,13 @@ router.post(
             status,
             feeKobo: 0,
             totalKobo: amountKobo,
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               vtu: vtuData
-            }
+            })
           }
         });
 
@@ -389,13 +390,13 @@ router.post(
           where: { id: debitResult.transaction.id },
           data: {
             status: "failed",
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               vtuError: err instanceof Error ? err.message : err
-            }
+            })
           }
         });
       });

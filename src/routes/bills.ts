@@ -26,6 +26,7 @@ import {
   buildBeneficiaryLabelSuggestion,
   normalizePayload
 } from "../utils/beneficiaries";
+import { asJson } from "../utils/prismaJson";
 
 const router = Router();
 
@@ -423,12 +424,12 @@ router.post(
           provider: "vtuafrica",
           providerRef: reference,
           status: "pending",
-          metaJson: {
+          metaJson: asJson({
             network: body.network,
             phone: body.phone,
             amountNgn: body.amountNgn,
             reference
-          }
+          })
         }
       });
 
@@ -459,13 +460,13 @@ router.post(
           where: { id: debitResult.transaction.id },
           data: {
             status,
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               provider: providerResponse
-            }
+            })
           }
         });
 
@@ -769,7 +770,7 @@ router.post(
           provider: "vtuafrica",
           providerRef: reference,
           status: "pending",
-          metaJson: {
+          metaJson: asJson({
             network: body.network,
             phone: body.phone,
             planId: body.planId,
@@ -789,7 +790,7 @@ router.post(
               totalAmountNgn: amountNgn
             },
             reference
-          }
+          })
         }
       });
 
@@ -821,13 +822,13 @@ router.post(
           where: { id: debitResult.transaction.id },
           data: {
             status,
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               provider: providerResponse
-            }
+            })
           }
         });
 
@@ -996,7 +997,7 @@ router.post(
           provider: "vtuafrica",
           providerRef: reference,
           status: "pending",
-          metaJson: {
+          metaJson: asJson({
             provider: body.provider,
             smartNo: normalizedSmartNo,
             planId: plan.id,
@@ -1015,7 +1016,7 @@ router.post(
               totalAmountNgn: amountNgn
             },
             reference
-          }
+          })
         }
       });
 
@@ -1045,13 +1046,13 @@ router.post(
           where: { id: debitResult.transaction.id },
           data: {
             status,
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               provider: providerResponse
-            }
+            })
           }
         });
 
@@ -1236,7 +1237,7 @@ router.post(
           provider: "vtuafrica",
           providerRef: reference,
           status: "pending",
-          metaJson: {
+          metaJson: asJson({
             serviceCode: body.serviceCode,
             meterNo: normalizedMeter,
             meterType: body.meterType,
@@ -1248,7 +1249,7 @@ router.post(
               totalAmountNgn: amountNgn
             },
             reference
-          }
+          })
         }
       });
 
@@ -1285,14 +1286,14 @@ router.post(
           where: { id: debitResult.transaction.id },
           data: {
             status,
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               provider: providerResponse,
               receipt
-            }
+            })
           }
         });
 
@@ -1504,7 +1505,7 @@ router.post(
         provider: "vtuafrica",
         providerRef: reference,
         status: "pending",
-        metaJson: {
+        metaJson: asJson({
           provider: providerId,
           userId: normalizedUserId,
           amountNgn,
@@ -1514,7 +1515,7 @@ router.post(
             ok: verifyResult.ok
           },
           reference
-        }
+        })
       }
     });
 
@@ -1539,12 +1540,12 @@ router.post(
           where: { id: pendingTx.id },
           data: {
             status: "failed",
-            metaJson: {
+            metaJson: asJson({
               ...(typeof pendingTx.metaJson === "object" && pendingTx.metaJson !== null
                 ? pendingTx.metaJson
                 : {}),
               provider: providerResponse
-            }
+            })
           }
         });
         throw new AppError(502, "Betting funding failed", "VTU_BETTING_FAILED", {
@@ -1572,13 +1573,13 @@ router.post(
             where: { id: pendingTx.id },
             data: {
               status: "failed",
-              metaJson: {
+              metaJson: asJson({
                 ...(typeof pendingTx.metaJson === "object" && pendingTx.metaJson !== null
                   ? pendingTx.metaJson
                   : {}),
                 provider: providerResponse,
                 chargeError: "INSUFFICIENT_FUNDS_FOR_PROVIDER"
-              }
+              })
             }
           });
           throw new AppError(
@@ -1602,7 +1603,7 @@ router.post(
             feeKobo,
             totalKobo: amountChargedKobo,
             status: "success",
-            metaJson: {
+            metaJson: asJson({
               ...(typeof pendingTx.metaJson === "object" && pendingTx.metaJson !== null
                 ? pendingTx.metaJson
                 : {}),
@@ -1612,7 +1613,7 @@ router.post(
                 charge: charge ?? 0,
                 amountCharged
               }
-            }
+            })
           }
         });
 
@@ -1638,13 +1639,13 @@ router.post(
         where: { id: pendingTx.id },
         data: {
           status: "failed",
-          metaJson: {
+          metaJson: asJson({
             ...(typeof pendingTx.metaJson === "object" && pendingTx.metaJson !== null
               ? pendingTx.metaJson
               : {}),
             provider: providerResponse ?? null,
             error: errorMessage
-          }
+          })
         }
       });
 

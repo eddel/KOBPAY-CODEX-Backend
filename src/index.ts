@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type Request } from "express";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import crypto from "crypto";
@@ -34,7 +34,7 @@ app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(
   express.json({
     verify: (req, _res, buf) => {
-      req.rawBody = buf;
+      (req as Request).rawBody = buf;
     }
   })
 );

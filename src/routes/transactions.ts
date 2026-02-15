@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { AppError, notFound } from "../errors";
 import { getBillStatus, toBillStatus } from "../services/vtuAfricaBillsService";
 import { logInfo, logWarn } from "../utils/logger";
+import { asJson } from "../utils/prismaJson";
 
 const router = Router();
 
@@ -171,13 +172,13 @@ router.post(
         where: { id: transaction.id },
         data: {
           status: mappedStatus,
-          metaJson: {
+          metaJson: asJson({
             ...(typeof transaction.metaJson === "object" &&
             transaction.metaJson !== null
               ? transaction.metaJson
               : {}),
             vtuStatus: statusData
-          }
+          })
         }
       });
       updatedTx = updated;

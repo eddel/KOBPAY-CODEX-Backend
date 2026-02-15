@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { AppError } from "../errors";
 import { env } from "../config/env";
 import { createReeplayCard } from "../services/reeplayService";
+import { asJson } from "../utils/prismaJson";
 
 const router = Router();
 
@@ -110,13 +111,13 @@ router.post(
           provider: "reeplay",
           providerRef: reference,
           status: "pending",
-          metaJson: {
+          metaJson: asJson({
             reference,
             amountKobo,
             currency: (body.currency ?? wallet.currency ?? env.FLW_CURRENCY).toUpperCase(),
             recipientEmail: body.recipientEmail ?? null,
             note: body.note ?? null
-          }
+          })
         }
       });
 
@@ -137,13 +138,13 @@ router.post(
         where: { id: debitResult.transaction.id },
         data: {
           status: "success",
-          metaJson: {
+          metaJson: asJson({
             ...(typeof debitResult.transaction.metaJson === "object" &&
             debitResult.transaction.metaJson !== null
               ? debitResult.transaction.metaJson
               : {}),
             reeplay: card
-          }
+          })
         }
       });
 
@@ -176,13 +177,13 @@ router.post(
           where: { id: debitResult.transaction.id },
           data: {
             status: "failed",
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               reeplayError: err instanceof Error ? err.message : err
-            }
+            })
           }
         });
       });

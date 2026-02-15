@@ -13,6 +13,7 @@ import {
   createDedicatedAccount,
   createPaystackCustomer
 } from "../services/paystackService";
+import { asJson } from "../utils/prismaJson";
 
 const router = Router();
 
@@ -400,7 +401,7 @@ router.post(
             provider: "flutterwave",
             providerRef,
             status: "successful",
-            metaJson: verification
+            metaJson: asJson(verification)
           }
         });
       });

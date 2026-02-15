@@ -16,12 +16,24 @@ export const buildBeneficiaryKey = (
   switch (category) {
     case "airtime":
     case "data":
-      return `${normalizeLower(payload.network)}:${normalizeDigits(payload.phone)}`;
+      return `${normalizeLower(
+        (payload as Extract<BeneficiaryPayload, { network: string }>).network
+      )}:${normalizeDigits(
+        (payload as Extract<BeneficiaryPayload, { phone: string }>).phone
+      )}`;
     case "cable":
-      return `${normalizeLower(payload.provider)}:${normalizeDigits(payload.smartNo)}`;
+      return `${normalizeLower(
+        (payload as Extract<BeneficiaryPayload, { provider: string }>).provider
+      )}:${normalizeDigits(
+        (payload as Extract<BeneficiaryPayload, { smartNo: string }>).smartNo
+      )}`;
     case "electricity":
-      return `${normalizeLower(payload.serviceCode)}:${normalizeDigits(payload.meterNo)}:${normalizeLower(
-        payload.meterType
+      return `${normalizeLower(
+        (payload as Extract<BeneficiaryPayload, { serviceCode: string }>).serviceCode
+      )}:${normalizeDigits(
+        (payload as Extract<BeneficiaryPayload, { meterNo: string }>).meterNo
+      )}:${normalizeLower(
+        (payload as Extract<BeneficiaryPayload, { meterType: string }>).meterType
       )}`;
     default:
       return "unknown";
@@ -36,20 +48,42 @@ export const normalizePayload = (
     case "airtime":
     case "data":
       return {
-        network: normalizeLower(payload.network) as "mtn" | "airtel" | "glo" | "9mobile",
-        phone: normalizeDigits(payload.phone)
+        network: normalizeLower(
+          (payload as Extract<BeneficiaryPayload, { network: string }>).network
+        ) as "mtn" | "airtel" | "glo" | "9mobile",
+        phone: normalizeDigits(
+          (payload as Extract<BeneficiaryPayload, { phone: string }>).phone
+        )
       };
     case "cable":
       return {
-        provider: normalizeLower(payload.provider) as "gotv" | "dstv" | "startimes",
-        smartNo: normalizeDigits(payload.smartNo),
-        planVariation: payload.planVariation ? normalizeLower(payload.planVariation) : undefined
+        provider: normalizeLower(
+          (payload as Extract<BeneficiaryPayload, { provider: string }>).provider
+        ) as "gotv" | "dstv" | "startimes",
+        smartNo: normalizeDigits(
+          (payload as Extract<BeneficiaryPayload, { smartNo: string }>).smartNo
+        ),
+        planVariation: (payload as Extract<
+          BeneficiaryPayload,
+          { planVariation?: string }
+        >).planVariation
+          ? normalizeLower(
+              (payload as Extract<BeneficiaryPayload, { planVariation?: string }>)
+                .planVariation ?? ""
+            )
+          : undefined
       };
     case "electricity":
       return {
-        serviceCode: normalizeLower(payload.serviceCode),
-        meterNo: normalizeDigits(payload.meterNo),
-        meterType: normalizeLower(payload.meterType) as "prepaid" | "postpaid"
+        serviceCode: normalizeLower(
+          (payload as Extract<BeneficiaryPayload, { serviceCode: string }>).serviceCode
+        ),
+        meterNo: normalizeDigits(
+          (payload as Extract<BeneficiaryPayload, { meterNo: string }>).meterNo
+        ),
+        meterType: normalizeLower(
+          (payload as Extract<BeneficiaryPayload, { meterType: string }>).meterType
+        ) as "prepaid" | "postpaid"
       };
     default:
       return payload;
@@ -63,11 +97,29 @@ export const buildBeneficiaryLabelSuggestion = (
   switch (category) {
     case "airtime":
     case "data":
-      return `${payload.network.toUpperCase()} ${payload.phone}`;
+      return `${(payload as Extract<
+        BeneficiaryPayload,
+        { network: string }
+      >).network.toUpperCase()} ${(payload as Extract<
+        BeneficiaryPayload,
+        { phone: string }
+      >).phone}`;
     case "cable":
-      return `${payload.provider.toUpperCase()} ${payload.smartNo}`;
+      return `${(payload as Extract<
+        BeneficiaryPayload,
+        { provider: string }
+      >).provider.toUpperCase()} ${(payload as Extract<
+        BeneficiaryPayload,
+        { smartNo: string }
+      >).smartNo}`;
     case "electricity":
-      return `${payload.serviceCode.replace(/-electric$/, "").toUpperCase()} ${payload.meterNo}`;
+      return `${(payload as Extract<
+        BeneficiaryPayload,
+        { serviceCode: string }
+      >).serviceCode.replace(/-electric$/, "").toUpperCase()} ${(payload as Extract<
+        BeneficiaryPayload,
+        { meterNo: string }
+      >).meterNo}`;
     default:
       return "Beneficiary";
   }

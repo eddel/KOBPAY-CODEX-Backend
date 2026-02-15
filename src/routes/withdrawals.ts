@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { AppError } from "../errors";
 import { env } from "../config/env";
 import { createTransfer, resolveBankAccount } from "../services/flutterwaveTransfersService";
+import { asJson } from "../utils/prismaJson";
 
 const router = Router();
 
@@ -29,7 +30,7 @@ const extractIdempotencyKey = (req: { headers: Record<string, unknown> }) => {
   const headerKey =
     (req.headers["x-idempotency-key"] as string | undefined) ??
     (req.headers["idempotency-key"] as string | undefined);
-  return headerKey?.trim() || null;
+  return headerKey?.trim() || undefined;
 };
 
 router.post(
@@ -132,13 +133,13 @@ router.post(
           provider: "flutterwave",
           providerRef: reference,
           status: "pending",
-          metaJson: {
+          metaJson: asJson({
             bankCode: body.bankCode,
             accountNumber: body.accountNumber,
             accountName: accountName ?? null,
             narration: body.narration ?? null,
             reference
-          }
+          })
         }
       });
 
@@ -172,13 +173,13 @@ router.post(
         where: { id: debitResult.transaction.id },
         data: {
           status,
-          metaJson: {
+          metaJson: asJson({
             ...(typeof debitResult.transaction.metaJson === "object" &&
             debitResult.transaction.metaJson !== null
               ? debitResult.transaction.metaJson
               : {}),
             flutterwave: transfer
-          }
+          })
         }
       });
 
@@ -219,13 +220,13 @@ router.post(
           where: { id: debitResult.transaction.id },
           data: {
             status: "failed",
-            metaJson: {
+            metaJson: asJson({
               ...(typeof debitResult.transaction.metaJson === "object" &&
               debitResult.transaction.metaJson !== null
                 ? debitResult.transaction.metaJson
                 : {}),
               flutterwaveError: err instanceof Error ? err.message : err
-            }
+            })
           }
         });
       });

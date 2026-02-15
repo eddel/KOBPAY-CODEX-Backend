@@ -22,17 +22,29 @@ const buildPayload = (userId: string, phone: string, type: TokenType) => ({
   type
 });
 
-const assertPayload = (
-  payload: JwtPayload | string,
-  type: TokenType
-): payload is AccessTokenPayload | RefreshTokenPayload => {
+const isAccessPayload = (
+  payload: JwtPayload | string
+): payload is AccessTokenPayload => {
   if (!payload || typeof payload === "string") {
     return false;
   }
   return (
     typeof payload.sub === "string" &&
     typeof payload.phone === "string" &&
-    payload.type === type
+    payload.type === "access"
+  );
+};
+
+const isRefreshPayload = (
+  payload: JwtPayload | string
+): payload is RefreshTokenPayload => {
+  if (!payload || typeof payload === "string") {
+    return false;
+  }
+  return (
+    typeof payload.sub === "string" &&
+    typeof payload.phone === "string" &&
+    payload.type === "refresh"
   );
 };
 
@@ -61,7 +73,7 @@ export const issueTokens = (userId: string, phone: string) => {
 export const verifyAccessToken = (token: string): AccessTokenPayload => {
   try {
     const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtPayload;
-    if (!assertPayload(payload, "access")) {
+    if (!isAccessPayload(payload)) {
       throw new AppError(401, "Invalid access token", "AUTH_INVALID");
     }
     return payload;
@@ -73,7 +85,7 @@ export const verifyAccessToken = (token: string): AccessTokenPayload => {
 export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
   try {
     const payload = jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload;
-    if (!assertPayload(payload, "refresh")) {
+    if (!isRefreshPayload(payload)) {
       throw new AppError(401, "Invalid refresh token", "AUTH_INVALID");
     }
     return payload;
