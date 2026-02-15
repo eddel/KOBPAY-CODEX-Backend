@@ -21,6 +21,7 @@ import securityRoutes from "./routes/security.js";
 import exchangeRoutes from "./routes/exchange.js";
 import adminExchangeRoutes from "./routes/admin/exchangeTrades.js";
 import adminBannerRoutes from "./routes/admin/banners.js";
+import adminBannerUiRoutes from "./routes/admin/bannerUi.js";
 import supportRoutes from "./routes/support.js";
 import bannerRoutes from "./routes/banners.js";
 import { authMiddleware } from "./middleware/auth.js";
@@ -142,6 +143,7 @@ app.use("/api/exchange", authMiddleware, exchangeRoutes);
 app.use("/api/support", authMiddleware, supportRoutes);
 app.use("/api/admin/exchange/trades", adminExchangeRoutes);
 app.use("/api/admin/banners", adminBannerRoutes);
+app.use("/admin/banners", adminBannerUiRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/webhooks", webhookRoutes);
 
