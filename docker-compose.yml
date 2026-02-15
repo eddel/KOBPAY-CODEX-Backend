@@ -23,6 +23,8 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://kobpay:kobpay_password@postgres:5432/kobpay?schema=public
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       - postgres
 volumes:

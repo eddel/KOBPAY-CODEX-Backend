@@ -1,3 +1,4 @@
+import path from "path";
 import express, { type Request } from "express";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
@@ -19,7 +20,9 @@ import accountRoutes from "./routes/account.js";
 import securityRoutes from "./routes/security.js";
 import exchangeRoutes from "./routes/exchange.js";
 import adminExchangeRoutes from "./routes/admin/exchangeTrades.js";
+import adminBannerRoutes from "./routes/admin/banners.js";
 import supportRoutes from "./routes/support.js";
+import bannerRoutes from "./routes/banners.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
 import { logWarn, logInfo } from "./utils/logger.js";
@@ -31,6 +34,10 @@ const corsOrigin = env.CORS_ORIGIN === "*"
   : env.CORS_ORIGIN.split(",").map((o) => o.trim());
 
 app.use(cors({ origin: corsOrigin, credentials: true }));
+app.use(
+  "/uploads/banners",
+  express.static(path.join(process.cwd(), "uploads", "banners"))
+);
 app.use(
   express.json({
     verify: (req, _res, buf) => {
@@ -134,6 +141,8 @@ app.use("/api/security", authMiddleware, securityRoutes);
 app.use("/api/exchange", authMiddleware, exchangeRoutes);
 app.use("/api/support", authMiddleware, supportRoutes);
 app.use("/api/admin/exchange/trades", adminExchangeRoutes);
+app.use("/api/admin/banners", adminBannerRoutes);
+app.use("/api/banners", bannerRoutes);
 app.use("/api/webhooks", webhookRoutes);
 
 app.get("/", (_req, res) => {

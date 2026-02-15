@@ -163,3 +163,17 @@ model ExchangeTrade {
   @@index([status])
   @@index([expiresAt])
 }
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String?
+  subtitle  String?
+  imagePath String
+  linkUrl   String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  startAt   DateTime?
+  endAt     DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
