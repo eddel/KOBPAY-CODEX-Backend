@@ -7,6 +7,8 @@ RUN npm ci
 
 COPY . .
 
+RUN npm run prisma:generate
+
 RUN npm run build
 
 ENV NODE_ENV=production
