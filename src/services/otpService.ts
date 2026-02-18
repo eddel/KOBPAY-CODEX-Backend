@@ -104,7 +104,7 @@ const isBulkSmsConfigured = () => {
 
 const buildOtpMessage = (code: string) => {
   const ttlMinutes = Math.max(1, Math.round(OTP_TTL_SECONDS / 60));
-  return `Your KOBPAY signup code is ${code}. It expires in ${ttlMinutes} minutes.`;
+  return `Your KOBPAY OTP is ${code}. It expires in ${ttlMinutes} minutes.`;
 };
 
 const sendBulkSms = async (phone: string, code: string) => {
