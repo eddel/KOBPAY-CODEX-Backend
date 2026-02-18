@@ -26,7 +26,7 @@ const envSchema = z.object({
   OTP_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(3),
   BULKSMS_BASE_URL: z
     .string()
-    .default("https://www.bulksmsnigeria.com/api/sandbox/v2"),
+    .default("https://www.bulksmsnigeria.com/api/v2"),
   BULKSMS_API_TOKEN: z.string().default(""),
   BULKSMS_SENDER_ID: z.string().default(""),
   BULKSMS_GATEWAY: z.string().default("otp"),

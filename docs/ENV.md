@@ -23,7 +23,7 @@ This document explains each environment variable and recommended dev values.
 - `DEV_OTP_FIXED_CODE`: Fixed OTP used in dev.
 - `OTP_RATE_LIMIT_WINDOW_SECONDS`: Rate-limit window for OTP requests.
 - `OTP_RATE_LIMIT_MAX_REQUESTS`: Max OTP requests per window.
-- `BULKSMS_BASE_URL`: Sandbox default `https://www.bulksmsnigeria.com/api/sandbox/v2` (use production `https://www.bulksmsnigeria.com/api/v2`).
+- `BULKSMS_BASE_URL`: Default `https://www.bulksmsnigeria.com/api/v2` (use sandbox `https://www.bulksmsnigeria.com/api/sandbox/v2` if needed).
 - `BULKSMS_API_TOKEN`: BulkSMS Nigeria API token.
 - `BULKSMS_SENDER_ID`: Sender ID (max 11 characters).
 - `BULKSMS_GATEWAY`: Optional gateway (`otp`, `direct-refund`, `direct-corporate`, `dual-backup`).

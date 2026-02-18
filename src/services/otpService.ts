@@ -104,7 +104,17 @@ const isBulkSmsConfigured = () => {
 
 const buildOtpMessage = (code: string) => {
   const ttlMinutes = Math.max(1, Math.round(OTP_TTL_SECONDS / 60));
-  return `Your KOBPAY OTP is ${code}. It expires in ${ttlMinutes} minutes.`;
+  return `Your KOB-Pass is ${code}. It expires in ${ttlMinutes} minutes.`;
+};
+
+const normalizeGateway = (gateway?: string | null) => {
+  if (!gateway) return undefined;
+  const cleaned = gateway
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
+  if (!cleaned) return undefined;
+  return cleaned;
 };
 
 const sendBulkSms = async (phone: string, code: string) => {
@@ -112,16 +122,22 @@ const sendBulkSms = async (phone: string, code: string) => {
     throw new AppError(501, "BulkSMS credentials missing", "OTP_PROVIDER_MISSING");
   }
 
-  const baseUrl = env.BULKSMS_BASE_URL.trim().replace(/\/+$/, "");
-  const url = `${baseUrl}/sms`;
+  let baseUrl = env.BULKSMS_BASE_URL.trim().replace(/\/+$/, "");
+  if (!baseUrl.endsWith("/sms")) {
+    if (!baseUrl.endsWith("/api/v2")) {
+      baseUrl = `${baseUrl}/api/v2`;
+    }
+    baseUrl = `${baseUrl}/sms`;
+  }
+  const url = baseUrl;
   const payload: Record<string, string> = {
     from: env.BULKSMS_SENDER_ID.trim(),
     to: toBulkSmsNumber(phone),
     body: buildOtpMessage(code),
-    customer_reference: `otp-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`
+    customer_reference: `otp${Date.now()}${Math.floor(Math.random() * 1_000_000)}`
   };
 
-  const gateway = env.BULKSMS_GATEWAY?.trim();
+  const gateway = normalizeGateway(env.BULKSMS_GATEWAY);
   if (gateway) {
     payload.gateway = gateway;
   }
@@ -241,4 +257,3 @@ export const verifyOtp = (phoneRaw: string, code: string) => {
   otpStore.delete(phone);
   return true;
 };
-
