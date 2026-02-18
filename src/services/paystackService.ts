@@ -155,10 +155,13 @@ export const createDedicatedAccount = async (input: {
     return createMockDedicatedAccount(input.accountName);
   }
 
+  const { firstName, lastName } = splitName(input.accountName);
   const payload = {
     customer: input.customerCode,
     preferred_bank: input.preferredBank ?? env.PAYSTACK_DEDICATED_PROVIDER,
-    phone: input.phone ?? undefined
+    phone: input.phone ?? undefined,
+    ...(firstName ? { first_name: firstName } : {}),
+    ...(lastName ? { last_name: lastName } : {})
   };
 
   const data = await paystackFetch<PaystackDedicatedAccount>("/dedicated_account", payload);
