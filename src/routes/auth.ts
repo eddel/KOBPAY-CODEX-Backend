@@ -37,7 +37,13 @@ router.post(
       where: { phone }
     });
     if (existing) {
-      throw new AppError(409, "Account already exists. Please log in.", "USER_EXISTS");
+      if (existing.status === "DELETED") {
+        // Allow reactivation via OTP flow
+      } else if (existing.status === "ACTIVE") {
+        throw new AppError(409, "Account already exists. Please log in.", "USER_EXISTS");
+      } else {
+        throw forbidden("User not active");
+      }
     }
 
     const result = await requestOtp(phone);
@@ -67,7 +73,13 @@ router.post(
       where: { phone }
     });
     if (existing) {
-      throw new AppError(409, "Account already exists. Please log in.", "USER_EXISTS");
+      if (existing.status === "DELETED") {
+        // Allow reactivation via OTP verification
+      } else if (existing.status === "ACTIVE") {
+        throw new AppError(409, "Account already exists. Please log in.", "USER_EXISTS");
+      } else {
+        throw forbidden("User not active");
+      }
     }
 
     const isValid = verifyOtp(phone, body.code);
@@ -77,17 +89,33 @@ router.post(
 
     const passwordHash = await bcrypt.hash(body.password, 10);
     const name = body.name.trim();
-    const user = await prisma.user.create({
-      data: {
-        phone,
-        name,
-        security: {
-          create: {
-            passwordHash
+    const user = existing
+      ? await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            phone,
+            name,
+            status: "ACTIVE",
+            deletedAt: null,
+            security: {
+              upsert: {
+                create: { passwordHash },
+                update: { passwordHash }
+              }
+            }
           }
-        }
-      }
-    });
+        })
+      : await prisma.user.create({
+          data: {
+            phone,
+            name,
+            security: {
+              create: {
+                passwordHash
+              }
+            }
+          }
+        });
 
     if (user.status !== "ACTIVE") {
       throw forbidden("User not active");
