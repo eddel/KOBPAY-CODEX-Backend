@@ -102,19 +102,22 @@ const isBulkSmsConfigured = () => {
   return true;
 };
 
-const buildOtpMessage = (code: string) => {
-  const ttlMinutes = Math.max(1, Math.round(OTP_TTL_SECONDS / 60));
-  return `Your KOB-Pass is ${code}. It expires in ${ttlMinutes} minutes.`;
+const formatOtpForSms = (code: string) => {
+  const trimmed = code.trim();
+  if (!/^\d+$/.test(trimmed) || trimmed.length <= 3) {
+    return trimmed;
+  }
+
+  return trimmed.replace(/(\d{3})(?=\d)/g, "$1-");
 };
 
-const normalizeGateway = (gateway?: string | null) => {
-  if (!gateway) return undefined;
-  const cleaned = gateway
-    .trim()
-    .toLowerCase()
-    .replace(/[_\s]+/g, "-");
-  if (!cleaned) return undefined;
-  return cleaned;
+const normalizeOtpInput = (value: string) =>
+  value.trim().replace(/[\s-]+/g, "");
+
+const buildOtpMessage = (code: string) => {
+  const ttlMinutes = Math.max(1, Math.round(OTP_TTL_SECONDS / 60));
+  const formattedCode = formatOtpForSms(code);
+  return `Your Kob pass is ${formattedCode}. Use immediately.`;
 };
 
 const sendBulkSms = async (phone: string, code: string) => {
@@ -122,22 +125,16 @@ const sendBulkSms = async (phone: string, code: string) => {
     throw new AppError(501, "BulkSMS credentials missing", "OTP_PROVIDER_MISSING");
   }
 
-  let baseUrl = env.BULKSMS_BASE_URL.trim().replace(/\/+$/, "");
-  if (!baseUrl.endsWith("/sms")) {
-    if (!baseUrl.endsWith("/api/v2")) {
-      baseUrl = `${baseUrl}/api/v2`;
-    }
-    baseUrl = `${baseUrl}/sms`;
-  }
-  const url = baseUrl;
+  const baseUrl = env.BULKSMS_BASE_URL.trim().replace(/\/+$/, "");
+  const url = `${baseUrl}/sms`;
   const payload: Record<string, string> = {
     from: env.BULKSMS_SENDER_ID.trim(),
     to: toBulkSmsNumber(phone),
     body: buildOtpMessage(code),
-    customer_reference: `otp${Date.now()}${Math.floor(Math.random() * 1_000_000)}`
+    customer_reference: `otp-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`
   };
 
-  const gateway = normalizeGateway(env.BULKSMS_GATEWAY);
+  const gateway = env.BULKSMS_GATEWAY?.trim();
   if (gateway) {
     payload.gateway = gateway;
   }
@@ -206,8 +203,9 @@ export const requestOtp = async (phoneRaw: string) => {
 
   let code = env.OTP_PROVIDER === "DEV" ? env.DEV_OTP_FIXED_CODE : generateRandomOtp();
   const expiresAt = Date.now() + OTP_TTL_SECONDS * 1000;
+  const storedCode = normalizeOtpInput(code);
 
-  otpStore.set(phone, { code, expiresAt });
+  otpStore.set(phone, { code: storedCode, expiresAt });
 
   if (env.OTP_PROVIDER === "BULKSMS") {
     try {
@@ -223,7 +221,7 @@ export const requestOtp = async (phoneRaw: string) => {
         phone
       });
       code = env.DEV_OTP_FIXED_CODE;
-      otpStore.set(phone, { code, expiresAt });
+      otpStore.set(phone, { code: normalizeOtpInput(code), expiresAt });
     }
   }
 
@@ -240,6 +238,7 @@ export const requestOtp = async (phoneRaw: string) => {
 export const verifyOtp = (phoneRaw: string, code: string) => {
   const phone = normalizePhone(phoneRaw);
   const record = otpStore.get(phone);
+  const normalizedCode = normalizeOtpInput(code);
 
   if (!record) {
     return false;
@@ -250,7 +249,7 @@ export const verifyOtp = (phoneRaw: string, code: string) => {
     return false;
   }
 
-  if (record.code !== code) {
+  if (record.code !== normalizedCode) {
     return false;
   }
 
