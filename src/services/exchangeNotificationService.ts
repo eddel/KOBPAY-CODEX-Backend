@@ -20,9 +20,9 @@ const actionLabels: Record<ExchangeAction, string> = {
 
 const smsMessages: Record<ExchangeAction, string> = {
   trade_created: "New exchange started successfully.",
-  payment_submitted: "Your exchange payment was submitted successfully.",
+  payment_submitted: "Your exchange was submitted successfully.",
   trade_cancelled: "Your exchange has been cancelled.",
-  payment_received: "Your exchange payment has been confirmed.",
+  payment_received: "Your exchange has been confirmed.",
   trade_completed: "Your exchange has been completed."
 };
 
