@@ -15,6 +15,36 @@ const ensureAuth = (userId?: string) => {
   }
 };
 
+const asRecord = (value: unknown): Record<string, any> | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, any>;
+};
+
+const extractElectricityToken = (metaJson: unknown): string | null => {
+  const meta = asRecord(metaJson);
+  if (!meta) return null;
+  const receipt = asRecord(meta.receipt);
+  const provider = asRecord(meta.provider);
+  const providerDescription = asRecord(provider?.description);
+
+  const token =
+    receipt?.token ??
+    receipt?.Token ??
+    meta.token ??
+    meta.Token ??
+    providerDescription?.Token ??
+    providerDescription?.token ??
+    provider?.Token ??
+    provider?.token ??
+    null;
+
+  if (token == null) return null;
+  const normalized = String(token).trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
 const buildReceipt = (tx: {
   id: string;
   type: string;
@@ -38,7 +68,10 @@ const buildReceipt = (tx: {
   provider: tx.provider,
   status: tx.status,
   createdAt: tx.createdAt,
-  meta: tx.metaJson ?? null
+  meta: tx.metaJson ?? null,
+  ...(tx.category === "electricity"
+    ? { token: extractElectricityToken(tx.metaJson) }
+    : {})
 });
 
 router.get(
