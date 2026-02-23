@@ -4,6 +4,8 @@ import { prisma } from "../../db.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { AppError, notFound } from "../../errors.js";
 import { env } from "../../config/env.js";
+import { notifyExchangeAction } from "../../services/exchangeNotificationService.js";
+import { logWarn } from "../../utils/logger.js";
 
 const router = Router();
 
@@ -80,7 +82,8 @@ router.post(
     ensureAdmin(req);
 
     const trade = await prisma.exchangeTrade.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: { user: { select: { phone: true } } }
     });
 
     if (!trade) {
@@ -99,6 +102,18 @@ router.post(
       }
     });
 
+    notifyExchangeAction({
+      action: "payment_received",
+      trade: updated,
+      userPhone: trade.user?.phone ?? null
+    }).catch((err) => {
+      logWarn("exchange_notification_failed", {
+        tradeId: updated.id,
+        action: "payment_received",
+        error: (err as Error).message
+      });
+    });
+
     res.json({
       ok: true,
       trade: serializeTrade(updated)
@@ -112,7 +127,8 @@ router.post(
     ensureAdmin(req);
 
     const trade = await prisma.exchangeTrade.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: { user: { select: { phone: true } } }
     });
 
     if (!trade) {
@@ -165,6 +181,18 @@ router.post(
       });
 
       return updated;
+    });
+
+    notifyExchangeAction({
+      action: "trade_completed",
+      trade: completed,
+      userPhone: trade.user?.phone ?? null
+    }).catch((err) => {
+      logWarn("exchange_notification_failed", {
+        tradeId: completed.id,
+        action: "trade_completed",
+        error: (err as Error).message
+      });
     });
 
     res.json({

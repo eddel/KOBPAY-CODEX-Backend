@@ -81,6 +81,7 @@ export const sendExchangeReceiptEmail = async (input: {
   const receiptLink = input.receiptFileUrl
     ? `${env.API_BASE_URL.replace(/\/$/, "")}${input.receiptFileUrl}`
     : null;
+  const adminLink = `${env.API_BASE_URL.replace(/\/$/, "")}/admin/banners`;
 
   const textLines = [
     `Trade ID: ${input.tradeId}`,
@@ -95,7 +96,9 @@ export const sendExchangeReceiptEmail = async (input: {
     "",
     receiptLink
       ? `Receipt: ${receiptLink} (requires admin key to download)`
-      : "Receipt: not available"
+      : "Receipt: not available",
+    "",
+    `Admin link: ${adminLink}`
   ];
 
   const mailOptions: nodemailer.SendMailOptions = {
@@ -125,6 +128,66 @@ export const sendExchangeReceiptEmail = async (input: {
 
   await transporter.sendMail(mailOptions);
   logInfo("exchange_receipt_email_sent", { tradeId: input.tradeId });
+};
+
+export const sendExchangeAdminNotification = async (input: {
+  action: string;
+  actionLabel: string;
+  trade: {
+    id: string;
+    userId: string;
+    fromCurrency: string;
+    toCurrency: string;
+    fromAmountMinor: number;
+    toAmountMinor: number;
+    rate: number;
+    rateSource?: string | null;
+    status: string;
+    createdAt: Date;
+    paidAt?: Date | null;
+    paymentReceivedAt?: Date | null;
+    completedAt?: Date | null;
+    cancelledAt?: Date | null;
+  };
+  eventAt?: Date;
+  adminLink?: string;
+}) => {
+  if (!isSmtpConfigured()) {
+    logWarn("smtp_not_configured", { tradeId: input.trade.id, action: input.action });
+    return;
+  }
+
+  const transporter = createTransport();
+  const adminLink =
+    input.adminLink ??
+    `${env.API_BASE_URL.replace(/\/$/, "")}/admin/banners`;
+  const eventAt = input.eventAt ?? new Date();
+
+  const textLines = [
+    `Action: ${input.actionLabel}`,
+    `Trade ID: ${input.trade.id}`,
+    `User ID: ${input.trade.userId}`,
+    `Status: ${input.trade.status}`,
+    `Pair: ${input.trade.fromCurrency} -> ${input.trade.toCurrency}`,
+    `From Amount: ${formatAmount(input.trade.fromAmountMinor, input.trade.fromCurrency)}`,
+    `To Amount: ${formatAmount(input.trade.toAmountMinor, input.trade.toCurrency)}`,
+    `Rate: ${input.trade.rate} (${input.trade.rateSource ?? "manual"})`,
+    `Event Time: ${eventAt.toISOString()}`,
+    "",
+    `Admin link: ${adminLink}`
+  ];
+
+  await transporter.sendMail({
+    from: env.SMTP_FROM,
+    to: env.ADMIN_RECEIPT_EMAIL,
+    subject: `KOBPAY Exchange ${input.actionLabel} - Trade ${input.trade.id}`,
+    text: textLines.join("\n")
+  });
+
+  logInfo("exchange_admin_email_sent", {
+    tradeId: input.trade.id,
+    action: input.action
+  });
 };
 
 export const sendSupportContactEmail = async (input: {

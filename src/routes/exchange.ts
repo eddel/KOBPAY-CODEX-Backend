@@ -10,6 +10,7 @@ import { fxRates, getFxRate } from "../config/fxRates.js";
 import { exchangePayTo } from "../config/exchangePayTo.js";
 import { env } from "../config/env.js";
 import { sendExchangeReceiptEmail } from "../services/emailService.js";
+import { notifyExchangeAction } from "../services/exchangeNotificationService.js";
 import { logWarn } from "../utils/logger.js";
 
 const router = Router();
@@ -195,6 +196,13 @@ router.post(
   asyncHandler(async (req, res) => {
     ensureAuth(req.auth?.userId);
 
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth!.userId }
+    });
+    if (!user) {
+      throw notFound("User not found");
+    }
+
     const body = z
       .object({
         fromCurrency: z.string(),
@@ -235,6 +243,18 @@ router.post(
         receivingDetailsJson: receivingDetails,
         payToDetailsJson: payToDetails
       }
+    });
+
+    notifyExchangeAction({
+      action: "trade_created",
+      trade,
+      userPhone: user.phone
+    }).catch((err) => {
+      logWarn("exchange_notification_failed", {
+        tradeId: trade.id,
+        action: "trade_created",
+        error: (err as Error).message
+      });
     });
 
     res.json({
@@ -292,6 +312,9 @@ router.post(
       where: {
         id: req.params.id,
         userId: req.auth!.userId
+      },
+      include: {
+        user: { select: { phone: true } }
       }
     });
 
@@ -347,6 +370,24 @@ router.post(
 
       await tx.exchangeTrade.delete({
         where: { id: trade.id }
+      });
+    });
+
+    const cancelledSnapshot = {
+      ...trade,
+      status: "CANCELLED",
+      cancelledAt: now
+    };
+
+    notifyExchangeAction({
+      action: "trade_cancelled",
+      trade: cancelledSnapshot,
+      userPhone: trade.user?.phone ?? null
+    }).catch((err) => {
+      logWarn("exchange_notification_failed", {
+        tradeId: trade.id,
+        action: "trade_cancelled",
+        error: (err as Error).message
       });
     });
 
@@ -423,6 +464,9 @@ router.post(
       where: {
         id: req.params.id,
         userId: req.auth!.userId
+      },
+      include: {
+        user: { select: { phone: true } }
       }
     });
 
@@ -471,6 +515,19 @@ router.post(
     } catch (err) {
       logWarn("exchange_receipt_email_failed", { tradeId: updated.id });
     }
+
+    notifyExchangeAction({
+      action: "payment_submitted",
+      trade: updated,
+      userPhone: trade.user?.phone ?? null,
+      notifyAdmin: false
+    }).catch((err) => {
+      logWarn("exchange_notification_failed", {
+        tradeId: updated.id,
+        action: "payment_submitted",
+        error: (err as Error).message
+      });
+    });
 
     res.json({
       ok: true,
