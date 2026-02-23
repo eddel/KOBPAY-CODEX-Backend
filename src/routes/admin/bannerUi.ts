@@ -320,7 +320,7 @@ const page = `<!doctype html>
             currency: currency || "NGN"
           }).format(major);
         } catch (_) {
-          return `${currency || "NGN"} ${major.toFixed(2)}`;
+          return (currency || "NGN") + " " + major.toFixed(2);
         }
       };
 
@@ -425,7 +425,7 @@ const page = `<!doctype html>
 
         for (const banner of banners) {
           const row = document.createElement("tr");
-          row.innerHTML = `
+          row.innerHTML = \`
             <td class="thumb">
               <img src="\${banner.imageUrl}" alt="banner"/>
               <div style="margin-top:8px;">
@@ -455,7 +455,7 @@ const page = `<!doctype html>
               </div>
               <div class="notice" data-field="status"></div>
             </td>
-          `;
+          \`;
           row.querySelector("[data-action='save']").addEventListener("click", async () => {
             const status = row.querySelector("[data-field='status']");
             status.textContent = "Saving...";
@@ -571,7 +571,7 @@ const page = `<!doctype html>
           const hasReceipt = Boolean(trade.receiptFileUrl);
           const rateText = Number.isFinite(trade.rate) ? trade.rate.toFixed(6) : "-";
 
-          row.innerHTML = `
+          row.innerHTML = \`
             <td>
               <div><strong>\${trade.id}</strong></div>
               <div class="notice">User: \${trade.userId}</div>
@@ -608,7 +608,7 @@ const page = `<!doctype html>
               </div>
               <div class="notice" data-field="status"></div>
             </td>
-          `;
+          \`;
 
           const statusEl = row.querySelector("[data-field='status']");
           const markBtn = row.querySelector("[data-action='mark']");
@@ -662,7 +662,7 @@ const page = `<!doctype html>
           btn.classList.toggle("active", btn.dataset.tab === tab);
         });
         panels.forEach((panel) => {
-          panel.classList.toggle("active", panel.id === `tab-\${tab}`);
+          panel.classList.toggle("active", panel.id === "tab-" + tab);
         });
         localStorage.setItem("kobpay_admin_tab", tab);
         if (tab === "exchange") {
