@@ -248,6 +248,7 @@ router.post(
     notifyExchangeAction({
       action: "trade_created",
       trade,
+      userName: user.name,
       userPhone: user.phone
     }).catch((err) => {
       logWarn("exchange_notification_failed", {
@@ -314,7 +315,7 @@ router.post(
         userId: req.auth!.userId
       },
       include: {
-        user: { select: { phone: true } }
+        user: { select: { phone: true, name: true } }
       }
     });
 
@@ -382,6 +383,7 @@ router.post(
     notifyExchangeAction({
       action: "trade_cancelled",
       trade: cancelledSnapshot,
+      userName: trade.user?.name ?? null,
       userPhone: trade.user?.phone ?? null
     }).catch((err) => {
       logWarn("exchange_notification_failed", {
@@ -466,7 +468,7 @@ router.post(
         userId: req.auth!.userId
       },
       include: {
-        user: { select: { phone: true } }
+        user: { select: { phone: true, name: true } }
       }
     });
 
@@ -500,6 +502,8 @@ router.post(
     try {
       await sendExchangeReceiptEmail({
         tradeId: updated.id,
+        userName: trade.user?.name ?? null,
+        userPhone: trade.user?.phone ?? null,
         fromCurrency: updated.fromCurrency,
         toCurrency: updated.toCurrency,
         fromAmountMinor: updated.fromAmountMinor,
@@ -519,6 +523,7 @@ router.post(
     notifyExchangeAction({
       action: "payment_submitted",
       trade: updated,
+      userName: trade.user?.name ?? null,
       userPhone: trade.user?.phone ?? null,
       notifyAdmin: false
     }).catch((err) => {

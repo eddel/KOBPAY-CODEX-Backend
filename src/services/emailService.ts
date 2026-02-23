@@ -60,6 +60,8 @@ const summarizeReceivingDetails = (details: any, currency: string) => {
 
 export const sendExchangeReceiptEmail = async (input: {
   tradeId: string;
+  userName?: string | null;
+  userPhone?: string | null;
   fromCurrency: string;
   toCurrency: string;
   fromAmountMinor: number;
@@ -85,6 +87,8 @@ export const sendExchangeReceiptEmail = async (input: {
 
   const textLines = [
     `Trade ID: ${input.tradeId}`,
+    `User Name: ${input.userName ?? "-"}`,
+    `User Phone: ${input.userPhone ?? "-"}`,
     `Pair: ${input.fromCurrency} -> ${input.toCurrency}`,
     `From Amount: ${formatAmount(input.fromAmountMinor, input.fromCurrency)}`,
     `To Amount: ${formatAmount(input.toAmountMinor, input.toCurrency)}`,
@@ -133,6 +137,8 @@ export const sendExchangeReceiptEmail = async (input: {
 export const sendExchangeAdminNotification = async (input: {
   action: string;
   actionLabel: string;
+  userName?: string | null;
+  userPhone?: string | null;
   trade: {
     id: string;
     userId: string;
@@ -166,6 +172,8 @@ export const sendExchangeAdminNotification = async (input: {
   const textLines = [
     `Action: ${input.actionLabel}`,
     `Trade ID: ${input.trade.id}`,
+    `User Name: ${input.userName ?? "-"}`,
+    `User Phone: ${input.userPhone ?? "-"}`,
     `User ID: ${input.trade.userId}`,
     `Status: ${input.trade.status}`,
     `Pair: ${input.trade.fromCurrency} -> ${input.trade.toCurrency}`,

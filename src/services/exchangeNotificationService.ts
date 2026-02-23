@@ -19,11 +19,11 @@ const actionLabels: Record<ExchangeAction, string> = {
 };
 
 const smsMessages: Record<ExchangeAction, string> = {
-  trade_created: "New exchange started successfully.",
-  payment_submitted: "Your exchange was submitted successfully.",
-  trade_cancelled: "Your exchange has been cancelled.",
-  payment_received: "Your exchange has been confirmed.",
-  trade_completed: "Your exchange has been completed."
+  trade_created: "New Kobpay exchange started successfully.",
+  payment_submitted: "Your Kobpay exchange was submitted successfully.",
+  trade_cancelled: "Your Kobpay exchange has been cancelled.",
+  payment_received: "Your Kobpay exchange has been confirmed.",
+  trade_completed: "Your Kobpay exchange has been completed."
 };
 
 const buildAdminLink = () =>
@@ -69,6 +69,7 @@ export const notifyExchangeAction = async (input: {
     completedAt?: Date | null;
     cancelledAt?: Date | null;
   };
+  userName?: string | null;
   userPhone?: string | null;
   notifyAdmin?: boolean;
   notifyUser?: boolean;
@@ -82,6 +83,8 @@ export const notifyExchangeAction = async (input: {
       sendExchangeAdminNotification({
         action: input.action,
         actionLabel,
+        userName: input.userName,
+        userPhone: input.userPhone,
         trade: input.trade,
         eventAt,
         adminLink: buildAdminLink()

@@ -28,6 +28,8 @@ const allowedStatuses = new Set([
 const serializeTrade = (trade: any) => ({
   id: trade.id,
   userId: trade.userId,
+  userName: trade.user?.name ?? null,
+  userPhone: trade.user?.phone ?? null,
   fromCurrency: trade.fromCurrency,
   toCurrency: trade.toCurrency,
   fromAmountMinor: trade.fromAmountMinor,
@@ -66,7 +68,10 @@ router.get(
 
     const trades = await prisma.exchangeTrade.findMany({
       where: status ? { status } : {},
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { name: true, phone: true } }
+      }
     });
 
     res.json({
@@ -83,7 +88,7 @@ router.post(
 
     const trade = await prisma.exchangeTrade.findUnique({
       where: { id: req.params.id },
-      include: { user: { select: { phone: true } } }
+      include: { user: { select: { phone: true, name: true } } }
     });
 
     if (!trade) {
@@ -105,6 +110,7 @@ router.post(
     notifyExchangeAction({
       action: "payment_received",
       trade: updated,
+      userName: trade.user?.name ?? null,
       userPhone: trade.user?.phone ?? null
     }).catch((err) => {
       logWarn("exchange_notification_failed", {
@@ -128,7 +134,7 @@ router.post(
 
     const trade = await prisma.exchangeTrade.findUnique({
       where: { id: req.params.id },
-      include: { user: { select: { phone: true } } }
+      include: { user: { select: { phone: true, name: true } } }
     });
 
     if (!trade) {
@@ -186,6 +192,7 @@ router.post(
     notifyExchangeAction({
       action: "trade_completed",
       trade: completed,
+      userName: trade.user?.name ?? null,
       userPhone: trade.user?.phone ?? null
     }).catch((err) => {
       logWarn("exchange_notification_failed", {

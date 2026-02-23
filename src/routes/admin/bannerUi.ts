@@ -574,7 +574,9 @@ const page = `<!doctype html>
           row.innerHTML = \`
             <td>
               <div><strong>\${trade.id}</strong></div>
-              <div class="notice">User: \${trade.userId}</div>
+              <div class="notice">User ID: \${trade.userId}</div>
+              <div class="notice">Name: \${trade.userName || "-"}</div>
+              <div class="notice">Phone: \${trade.userPhone || "-"}</div>
               <div class="notice">Created: \${formatDate(trade.createdAt)}</div>
             </td>
             <td>
