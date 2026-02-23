@@ -134,7 +134,7 @@ const page = `<!doctype html>
   <body>
     <header>
       <h1>KOBPAY Admin Console</h1>
-      <p>Banners + Exchange approvals</p>
+      <p>Banners + Exchange approvals + Users</p>
     </header>
     <main>
       <section class="panel">
@@ -151,6 +151,7 @@ const page = `<!doctype html>
       <div class="tabs">
         <button class="tab-btn active" data-tab="banners">Banners</button>
         <button class="tab-btn" data-tab="exchange">Exchange</button>
+        <button class="tab-btn" data-tab="users">Users</button>
       </div>
 
       <div id="tab-banners" class="tab-panel active">
@@ -261,6 +262,61 @@ const page = `<!doctype html>
           </div>
         </section>
       </div>
+
+      <div id="tab-users" class="tab-panel">
+        <section class="panel">
+          <div class="row" style="justify-content: space-between; align-items: flex-end;">
+            <div>
+              <h3 style="margin: 0;">Users</h3>
+              <div class="notice">Search and manage users, view wallet balances, and review recent transactions.</div>
+            </div>
+            <div class="row" style="align-items: flex-end;">
+              <div class="field" style="max-width: 220px;">
+                <label>Search</label>
+                <input id="userSearch" type="text" placeholder="name, phone, email, id" />
+              </div>
+              <div class="field" style="max-width: 200px;">
+                <label>Status</label>
+                <select id="userStatus">
+                  <option value="">All</option>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="SUSPENDED">SUSPENDED</option>
+                  <option value="DISABLED">DISABLED</option>
+                  <option value="DELETED">DELETED</option>
+                </select>
+              </div>
+              <div class="field" style="max-width: 120px;">
+                <label>Limit</label>
+                <select id="userLimit">
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+              <button class="secondary" id="userRefreshBtn">Refresh</button>
+            </div>
+          </div>
+          <div class="notice" id="userStatusMsg"></div>
+          <div class="table-wrap">
+            <table id="userTable">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Profile</th>
+                  <th>Wallet</th>
+                  <th>Transactions</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+            <button class="secondary" id="userLoadMoreBtn">Load More</button>
+            <span class="notice" id="userLoadMoreStatus"></span>
+          </div>
+        </section>
+      </div>
     </main>
 
     <script>
@@ -274,6 +330,17 @@ const page = `<!doctype html>
       const exchangeStatus = document.getElementById("exchangeStatus");
       const exchangeStatusMsg = document.getElementById("exchangeStatusMsg");
       const exchangeTableBody = document.querySelector("#exchangeTable tbody");
+
+      const userSearchInput = document.getElementById("userSearch");
+      const userStatusFilter = document.getElementById("userStatus");
+      const userLimitSelect = document.getElementById("userLimit");
+      const userStatusMsg = document.getElementById("userStatusMsg");
+      const userTableBody = document.querySelector("#userTable tbody");
+      const userLoadMoreBtn = document.getElementById("userLoadMoreBtn");
+      const userLoadMoreStatus = document.getElementById("userLoadMoreStatus");
+
+      let userNextCursor = null;
+      let userLoading = false;
 
       const loadKey = () => {
         const stored = localStorage.getItem("kobpay_admin_key") || "";
@@ -657,6 +724,244 @@ const page = `<!doctype html>
         }
       };
 
+      const fetchUsers = async (cursor) => {
+        clearStatus(userStatusMsg);
+        const status = userStatusFilter.value.trim();
+        const query = userSearchInput.value.trim();
+        const limit = userLimitSelect.value.trim();
+        const url = new URL(apiBase + "/api/admin/users");
+        if (status) {
+          url.searchParams.set("status", status);
+        }
+        if (query) {
+          url.searchParams.set("q", query);
+        }
+        if (limit) {
+          url.searchParams.set("limit", limit);
+        }
+        if (cursor) {
+          url.searchParams.set("cursor", cursor);
+        }
+        const resp = await fetch(url.toString(), { headers: headers() });
+        if (!resp.ok) {
+          throw new Error("Failed to load users (check admin key)");
+        }
+        return resp.json();
+      };
+
+      const updateUser = async (id, payload) => {
+        const resp = await fetch(apiBase + "/api/admin/users/" + id, {
+          method: "PATCH",
+          headers: {
+            ...headers(),
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => null);
+          throw new Error(body?.error?.message || "Failed to update user");
+        }
+        return resp.json();
+      };
+
+      const deleteUser = async (id) => {
+        const resp = await fetch(apiBase + "/api/admin/users/" + id, {
+          method: "DELETE",
+          headers: headers()
+        });
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => null);
+          throw new Error(body?.error?.message || "Failed to delete user");
+        }
+        return resp.json();
+      };
+
+      const fetchUserTransactions = async (userId) => {
+        const url = new URL(apiBase + "/api/admin/users/" + userId + "/transactions");
+        url.searchParams.set("limit", "10");
+        const resp = await fetch(url.toString(), { headers: headers() });
+        if (!resp.ok) {
+          throw new Error("Failed to load transactions");
+        }
+        return resp.json();
+      };
+
+      const buildTransactionTable = (transactions) => {
+        if (!transactions.length) {
+          return '<div class="notice">No transactions found.</div>';
+        }
+        const rows = transactions
+          .map(
+            (tx) => \`
+              <tr>
+                <td>
+                  <div><strong>\${tx.category || "-"}</strong></div>
+                  <div class="notice">\${tx.id}</div>
+                </td>
+                <td>\${formatMoney(tx.totalKobo ?? tx.amountKobo, "NGN")}</td>
+                <td>\${tx.status || "-"}</td>
+                <td>\${formatDate(tx.createdAt)}</td>
+              </tr>
+            \`
+          )
+          .join("");
+
+        return \`
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Transaction</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${rows}
+              </tbody>
+            </table>
+          </div>
+        \`;
+      };
+
+      const renderUsers = async ({ append = false } = {}) => {
+        if (userLoading) return;
+        userLoading = true;
+        if (!append) {
+          userTableBody.innerHTML = "";
+          userNextCursor = null;
+        }
+        userLoadMoreStatus.textContent = "";
+        userLoadMoreBtn.disabled = true;
+        clearStatus(userStatusMsg);
+
+        let data;
+        try {
+          data = await fetchUsers(append ? userNextCursor : null);
+        } catch (err) {
+          showError(userStatusMsg, err);
+          userLoading = false;
+          return;
+        }
+
+        const users = data?.users || [];
+        if (!append && !users.length) {
+          userStatusMsg.textContent = "No users found.";
+        }
+
+        for (const user of users) {
+          const row = document.createElement("tr");
+          const status = user.status || "ACTIVE";
+          row.innerHTML = \`
+            <td>
+              <div><strong>\${user.name || "-"}</strong></div>
+              <div class="notice">ID: \${user.id}</div>
+              <div class="notice">Phone: \${user.phone || "-"}</div>
+              <div class="notice">Created: \${formatDate(user.createdAt)}</div>
+              <div class="notice">Deleted: \${formatDate(user.deletedAt)}</div>
+            </td>
+            <td>
+              <div class="field"><label>Name</label><input data-field="name" type="text" value="\${user.name || ""}"/></div>
+              <div class="field" style="margin-top:8px;"><label>Email</label><input data-field="email" type="text" value="\${user.email || ""}"/></div>
+              <div class="field" style="margin-top:8px;"><label>Phone</label><input data-field="phone" type="text" value="\${user.phone || ""}"/></div>
+              <div class="field" style="margin-top:8px;"><label>Status</label>
+                <select data-field="status">
+                  <option value="ACTIVE" \${status === "ACTIVE" ? "selected" : ""}>ACTIVE</option>
+                  <option value="SUSPENDED" \${status === "SUSPENDED" ? "selected" : ""}>SUSPENDED</option>
+                  <option value="DISABLED" \${status === "DISABLED" ? "selected" : ""}>DISABLED</option>
+                  <option value="DELETED" \${status === "DELETED" ? "selected" : ""}>DELETED</option>
+                </select>
+              </div>
+            </td>
+            <td>
+              <div>Balance: \${formatMoney(user.walletBalanceKobo, user.walletCurrency || "NGN")}</div>
+              <div class="notice">Updated: \${formatDate(user.walletUpdatedAt)}</div>
+            </td>
+            <td>
+              <div><strong>\${user.transactionCount || 0}</strong> total</div>
+              <details>
+                <summary>View latest</summary>
+                <div class="notice" data-field="tx-status"></div>
+                <div data-field="tx-list"></div>
+              </details>
+            </td>
+            <td>
+              <div class="actions">
+                <button data-action="save" class="small">Save</button>
+                <button data-action="delete" class="danger small">Delete</button>
+              </div>
+              <div class="notice" data-field="status"></div>
+            </td>
+          \`;
+
+          const statusEl = row.querySelector("[data-field='status']");
+          row.querySelector("[data-action='save']").addEventListener("click", async () => {
+            statusEl.textContent = "Saving...";
+            statusEl.classList.remove("error");
+            const payload = {
+              name: row.querySelector("[data-field='name']").value,
+              email: row.querySelector("[data-field='email']").value,
+              phone: row.querySelector("[data-field='phone']").value,
+              status: row.querySelector("[data-field='status']").value
+            };
+            try {
+              await updateUser(user.id, payload);
+              statusEl.textContent = "Saved";
+              await renderUsers();
+            } catch (err) {
+              statusEl.textContent = err?.message || String(err);
+              statusEl.classList.add("error");
+            }
+          });
+
+          row.querySelector("[data-action='delete']").addEventListener("click", async () => {
+            if (!confirm("Delete this user? This will deactivate beneficiaries.")) return;
+            statusEl.textContent = "Deleting...";
+            statusEl.classList.remove("error");
+            try {
+              await deleteUser(user.id);
+              statusEl.textContent = "Deleted";
+              await renderUsers();
+            } catch (err) {
+              statusEl.textContent = err?.message || String(err);
+              statusEl.classList.add("error");
+            }
+          });
+
+          const details = row.querySelector("details");
+          details.addEventListener("toggle", async () => {
+            if (!details.open || details.dataset.loaded === "true") return;
+            const txStatus = row.querySelector("[data-field='tx-status']");
+            const txList = row.querySelector("[data-field='tx-list']");
+            txStatus.textContent = "Loading...";
+            txStatus.classList.remove("error");
+            try {
+              const data = await fetchUserTransactions(user.id);
+              txList.innerHTML = buildTransactionTable(data?.transactions || []);
+              txStatus.textContent = "";
+              details.dataset.loaded = "true";
+            } catch (err) {
+              txStatus.textContent = err?.message || String(err);
+              txStatus.classList.add("error");
+            }
+          });
+
+          userTableBody.appendChild(row);
+        }
+
+        userNextCursor = data?.nextCursor || null;
+        if (userNextCursor) {
+          userLoadMoreBtn.disabled = false;
+          userLoadMoreStatus.textContent = "More available";
+        } else if (users.length) {
+          userLoadMoreStatus.textContent = "End of list";
+        }
+
+        userLoading = false;
+      };
+
       const switchTab = (tab) => {
         const buttons = document.querySelectorAll(".tab-btn");
         const panels = document.querySelectorAll(".tab-panel");
@@ -670,6 +975,9 @@ const page = `<!doctype html>
         if (tab === "exchange") {
           renderTrades();
         }
+        if (tab === "users") {
+          renderUsers();
+        }
       };
 
       document.getElementById("saveKey").addEventListener("click", saveKey);
@@ -679,6 +987,15 @@ const page = `<!doctype html>
       document.getElementById("refreshBtn").addEventListener("click", renderBanners);
       document.getElementById("exchangeRefreshBtn").addEventListener("click", renderTrades);
       exchangeStatus.addEventListener("change", renderTrades);
+      document.getElementById("userRefreshBtn").addEventListener("click", () => renderUsers());
+      userStatusFilter.addEventListener("change", () => renderUsers());
+      userLimitSelect.addEventListener("change", () => renderUsers());
+      userLoadMoreBtn.addEventListener("click", () => renderUsers({ append: true }));
+      userSearchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          renderUsers();
+        }
+      });
 
       document.querySelectorAll(".tab-btn").forEach((btn) => {
         btn.addEventListener("click", () => switchTab(btn.dataset.tab));
