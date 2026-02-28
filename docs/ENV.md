@@ -75,7 +75,7 @@ Note: For sandbox, set `VTU_BASE_URL` to `https://vtuafrica.com.ng/portal/api-te
 
 ## Admin (optional)
 - `ADMIN_EMAIL`: Optional admin login email.
-- `ADMIN_PASSWORD`: Optional admin password.
+- `ADMIN_PASSWORD`: Optional admin password. Default `0424` (used for admin wallet adjustments).
 - `ADMIN_API_KEY`: Admin API key for exchange approvals (header: `x-admin-key`).
 
 ## Logging

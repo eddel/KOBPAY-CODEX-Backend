@@ -1,9 +1,11 @@
+import crypto from "crypto";
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../db.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { AppError, notFound } from "../../errors.js";
 import { env } from "../../config/env.js";
+import { asJson } from "../../utils/prismaJson.js";
 
 const router = Router();
 
@@ -11,6 +13,30 @@ const ensureAdmin = (req: any) => {
   const key = req.headers["x-admin-key"];
   if (!env.ADMIN_API_KEY || typeof key !== "string" || key !== env.ADMIN_API_KEY) {
     throw new AppError(401, "Invalid admin key", "ADMIN_KEY_INVALID");
+  }
+};
+
+const safeEqual = (a: string, b: string) => {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+};
+
+const ensureAdminPassword = (password?: string) => {
+  const expected = env.ADMIN_PASSWORD?.trim() ?? "";
+  if (!expected) {
+    throw new AppError(
+      500,
+      "Admin password not configured",
+      "ADMIN_PASSWORD_NOT_CONFIGURED"
+    );
+  }
+  if (!password || !password.trim()) {
+    throw new AppError(401, "Admin password required", "ADMIN_PASSWORD_REQUIRED");
+  }
+  if (!safeEqual(password.trim(), expected)) {
+    throw new AppError(401, "Invalid admin password", "ADMIN_PASSWORD_INVALID");
   }
 };
 
@@ -34,6 +60,15 @@ const ensureValidPhone = (phone: string) => {
   if (trimmed.length < 6) {
     throw new AppError(400, "Invalid phone number", "INVALID_PHONE");
   }
+};
+
+const toKobo = (value: unknown) => {
+  const amount =
+    typeof value === "number" ? value : typeof value === "string" ? Number(value) : 0;
+  if (!Number.isFinite(amount)) {
+    return 0;
+  }
+  return Math.round(amount * 100);
 };
 
 const serializeUser = (user: any) => ({
@@ -152,6 +187,115 @@ router.get(
       ok: true,
       transactions: transactions.map(serializeTransaction),
       nextCursor
+    });
+  })
+);
+
+router.post(
+  "/:id/wallet/adjust",
+  asyncHandler(async (req, res) => {
+    ensureAdmin(req);
+
+    const body = z
+      .object({
+        direction: z.enum(["credit", "debit"]),
+        amount: z.coerce.number().positive().optional(),
+        amountKobo: z.coerce.number().int().positive().optional(),
+        currency: z.string().min(3).max(3).optional(),
+        note: z.string().max(240).optional(),
+        adminPassword: z.string().min(1)
+      })
+      .refine((data) => data.amount !== undefined || data.amountKobo !== undefined, {
+        message: "amount or amountKobo is required"
+      })
+      .parse(req.body);
+
+    ensureAdminPassword(body.adminPassword);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!user) {
+      throw notFound("User not found");
+    }
+
+    const amountKobo = body.amountKobo ?? toKobo(body.amount ?? 0);
+    if (!amountKobo || amountKobo <= 0) {
+      throw new AppError(400, "Amount must be greater than zero", "AMOUNT_REQUIRED");
+    }
+
+    const direction = body.direction;
+    const note = body.note?.trim() || null;
+    const requestedCurrency = body.currency ? body.currency.toUpperCase() : null;
+
+    const result = await prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({
+        where: { userId: user.id }
+      });
+
+      if (wallet && requestedCurrency && wallet.currency !== requestedCurrency) {
+        throw new AppError(400, "Wallet currency mismatch", "WALLET_CURRENCY_MISMATCH");
+      }
+      if (!wallet && direction === "debit") {
+        throw new AppError(400, "Wallet not found", "WALLET_NOT_FOUND");
+      }
+
+      const balanceBefore = wallet?.balanceKobo ?? 0;
+      if (direction === "debit" && balanceBefore < amountKobo) {
+        throw new AppError(400, "Insufficient wallet balance", "INSUFFICIENT_FUNDS");
+      }
+
+      const walletCurrency = (wallet?.currency ?? requestedCurrency ?? env.FLW_CURRENCY).toUpperCase();
+      const delta = direction === "credit" ? amountKobo : -amountKobo;
+      const updatedWallet = wallet
+        ? await tx.wallet.update({
+            where: { userId: user.id },
+            data: {
+              balanceKobo: { increment: delta },
+              currency: walletCurrency
+            }
+          })
+        : await tx.wallet.create({
+            data: {
+              userId: user.id,
+              balanceKobo: amountKobo,
+              currency: walletCurrency
+            }
+          });
+
+      const providerRef = `admin_${Date.now()}_${crypto.randomUUID()}`;
+      const transaction = await tx.transaction.create({
+        data: {
+          userId: user.id,
+          type: direction,
+          category: "admin_adjustment",
+          amountKobo,
+          feeKobo: 0,
+          totalKobo: amountKobo,
+          provider: "admin",
+          providerRef,
+          status: "successful",
+          metaJson: asJson({
+            note,
+            direction,
+            balanceBefore,
+            balanceAfter: updatedWallet.balanceKobo
+          })
+        }
+      });
+
+      return { wallet: updatedWallet, transaction };
+    });
+
+    res.json({
+      ok: true,
+      wallet: {
+        userId: result.wallet.userId,
+        balanceKobo: result.wallet.balanceKobo,
+        currency: result.wallet.currency,
+        updatedAt: result.wallet.updatedAt
+      },
+      transaction: serializeTransaction(result.transaction)
     });
   })
 );

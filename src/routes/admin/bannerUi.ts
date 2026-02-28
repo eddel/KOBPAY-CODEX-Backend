@@ -268,7 +268,7 @@ const page = `<!doctype html>
           <div class="row" style="justify-content: space-between; align-items: flex-end;">
             <div>
               <h3 style="margin: 0;">Users</h3>
-              <div class="notice">Search and manage users, view wallet balances, and review recent transactions.</div>
+              <div class="notice">Search and manage users, view wallet balances, adjust wallets, and review recent transactions.</div>
             </div>
             <div class="row" style="align-items: flex-end;">
               <div class="field" style="max-width: 220px;">
@@ -765,6 +765,22 @@ const page = `<!doctype html>
         return resp.json();
       };
 
+      const adjustWallet = async (id, payload) => {
+        const resp = await fetch(apiBase + "/api/admin/users/" + id + "/wallet/adjust", {
+          method: "POST",
+          headers: {
+            ...headers(),
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => null);
+          throw new Error(body?.error?.message || "Failed to update wallet");
+        }
+        return resp.json();
+      };
+
       const deleteUser = async (id) => {
         const resp = await fetch(apiBase + "/api/admin/users/" + id, {
           method: "DELETE",
@@ -878,10 +894,37 @@ const page = `<!doctype html>
             <td>
               <div>Balance: \${formatMoney(user.walletBalanceKobo, user.walletCurrency || "NGN")}</div>
               <div class="notice">Updated: \${formatDate(user.walletUpdatedAt)}</div>
+              <details>
+                <summary>Adjust wallet</summary>
+                <div class="notice">Admin password required.</div>
+                <div class="row" style="margin-top:8px;">
+                  <div class="field" style="max-width: 140px;">
+                    <label>Amount (\${user.walletCurrency || "NGN"})</label>
+                    <input data-field="wallet-amount" type="number" min="0" step="0.01" />
+                  </div>
+                  <div class="field" style="max-width: 120px;">
+                    <label>Type</label>
+                    <select data-field="wallet-direction">
+                      <option value="credit">credit</option>
+                      <option value="debit">debit</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Reason</label>
+                    <input data-field="wallet-note" type="text" placeholder="optional note" />
+                  </div>
+                  <div class="field" style="max-width: 180px;">
+                    <label>Admin Password</label>
+                    <input data-field="wallet-password" type="password" placeholder="Required" />
+                  </div>
+                  <button data-action="wallet-apply" class="small">Apply</button>
+                </div>
+                <div class="notice" data-field="wallet-status"></div>
+              </details>
             </td>
             <td>
               <div><strong>\${user.transactionCount || 0}</strong> total</div>
-              <details>
+              <details data-role="tx-details">
                 <summary>View latest</summary>
                 <div class="notice" data-field="tx-status"></div>
                 <div data-field="tx-list"></div>
@@ -930,7 +973,60 @@ const page = `<!doctype html>
             }
           });
 
-          const details = row.querySelector("details");
+          const walletStatusEl = row.querySelector("[data-field='wallet-status']");
+          const walletAmountInput = row.querySelector("[data-field='wallet-amount']");
+          const walletDirection = row.querySelector("[data-field='wallet-direction']");
+          const walletNote = row.querySelector("[data-field='wallet-note']");
+          const walletPassword = row.querySelector("[data-field='wallet-password']");
+          const walletApplyBtn = row.querySelector("[data-action='wallet-apply']");
+
+          walletApplyBtn.addEventListener("click", async () => {
+            walletStatusEl.textContent = "";
+            walletStatusEl.classList.remove("error");
+            const amount = Number(walletAmountInput.value);
+            if (!Number.isFinite(amount) || amount <= 0) {
+              walletStatusEl.textContent = "Enter a valid amount";
+              walletStatusEl.classList.add("error");
+              return;
+            }
+            const adminPassword = walletPassword.value.trim();
+            if (!adminPassword) {
+              walletStatusEl.textContent = "Admin password is required";
+              walletStatusEl.classList.add("error");
+              return;
+            }
+
+            const direction = walletDirection.value;
+            const note = walletNote.value.trim();
+            const displayAmount = formatMoney(Math.round(amount * 100), user.walletCurrency || "NGN");
+            const label = user.name || user.phone || user.id;
+            if (!confirm("Confirm " + direction + " of " + displayAmount + " for " + label + "?")) {
+              return;
+            }
+
+            walletApplyBtn.disabled = true;
+            walletStatusEl.textContent = "Updating...";
+            try {
+              await adjustWallet(user.id, {
+                direction,
+                amount,
+                note: note || undefined,
+                adminPassword
+              });
+              walletStatusEl.textContent = "Wallet updated";
+              walletAmountInput.value = "";
+              walletNote.value = "";
+              walletPassword.value = "";
+              await renderUsers();
+            } catch (err) {
+              walletStatusEl.textContent = err?.message || String(err);
+              walletStatusEl.classList.add("error");
+            } finally {
+              walletApplyBtn.disabled = false;
+            }
+          });
+
+          const details = row.querySelector("details[data-role='tx-details']");
           details.addEventListener("toggle", async () => {
             if (!details.open || details.dataset.loaded === "true") return;
             const txStatus = row.querySelector("[data-field='tx-status']");

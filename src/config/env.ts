@@ -66,7 +66,7 @@ const envSchema = z.object({
   SMTP_FROM: z.string().default("KOBPAY <no-reply@kobpay.com>"),
   ADMIN_RECEIPT_EMAIL: z.string().default("kobpayhq@gmail.com"),
   ADMIN_EMAIL: z.string().default("admin@kobpay.local"),
-  ADMIN_PASSWORD: z.string().default("ChangeMe_StrongPassword"),
+  ADMIN_PASSWORD: z.string().default("0424"),
   ADMIN_API_KEY: z.string().default(""),
   LOG_LEVEL: z.string().default("debug"),
   CORS_ORIGIN: z.string().default("*")
