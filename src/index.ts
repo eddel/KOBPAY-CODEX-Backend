@@ -163,8 +163,10 @@ app.use((_req, res) => {
 
 app.use(errorHandler);
 
-app.listen(env.PORT, "0.0.0.0", () => {
-  logInfo("server_started", { url: env.API_BASE_URL, port: env.PORT });
-  console.log(`KOBPAY API running on ${env.API_BASE_URL}`);
+const PORT = process.env.PORT || env.PORT || 4000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  logInfo("server_started", { url: env.API_BASE_URL, port: PORT });
+  console.log(`KOBPAY API running on port ${PORT}`);
 });
 
