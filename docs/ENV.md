@@ -75,11 +75,13 @@ Note: For sandbox, set `VTU_BASE_URL` to `https://vtuafrica.com.ng/portal/api-te
 
 ## Admin (optional)
 - `ADMIN_EMAIL`: Optional admin login email.
-- `ADMIN_PASSWORD`: Optional admin password. Default `0424` (used for admin wallet adjustments).
+- `ADMIN_PASSWORD`: Optional admin password for protected admin wallet adjustments. Leave unset to disable those actions until you configure a secret value.
 - `ADMIN_API_KEY`: Admin API key for exchange approvals (header: `x-admin-key`).
 
 ## Logging
 - `LOG_LEVEL`: `debug` in dev (enables detailed bill request/response logs).
+- `CORS_ORIGIN`: Allowed origin list for CORS. Use `*` for broad testing access or a comma-separated list of exact origins.
+- `UPLOADS_DIR`: Root directory for banner and receipt uploads. Defaults to `uploads`. On Render with a persistent disk, point this at the mounted path or keep the default if the disk is mounted there.
 
 ## Mobile API base URL
 Configured in `mobile/lib/core/config/app_config.dart`:

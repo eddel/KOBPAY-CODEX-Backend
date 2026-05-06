@@ -9,6 +9,7 @@ import { AppError, notFound } from "../errors.js";
 import { fxRates, getFxRate } from "../config/fxRates.js";
 import { exchangePayTo } from "../config/exchangePayTo.js";
 import { env } from "../config/env.js";
+import { resolveUploadPath } from "../config/paths.js";
 import { sendExchangeReceiptEmail } from "../services/emailService.js";
 import { notifyExchangeAction } from "../services/exchangeNotificationService.js";
 import { logWarn } from "../utils/logger.js";
@@ -16,7 +17,7 @@ import { logWarn } from "../utils/logger.js";
 const router = Router();
 
 const RECEIPT_MAX_BYTES = 8 * 1024 * 1024;
-const RECEIPTS_DIR = path.join(process.cwd(), "uploads", "exchange_receipts");
+const RECEIPTS_DIR = resolveUploadPath("exchange_receipts");
 
 const upload = multer({
   storage: multer.memoryStorage(),

@@ -53,6 +53,17 @@ Ensure `FLW_WEBHOOK_SECRET` in `.env` matches the secret set in Flutterwave.
 See `docs/ENV.md` for all backend environment variables.
 Bills testing guide: `docs/BILLS_TESTING.md`.
 
+## Render deploy
+This repo includes a root-level `render.yaml` Blueprint for the backend.
+
+Render setup notes:
+- The web service uses the repository root as its root directory.
+- Prisma migrations run with `npm run prisma:migrate:deploy` before each deploy.
+- The Blueprint creates a managed Postgres database and wires `DATABASE_URL` from it.
+- Render will prompt for `sync: false` variables such as `API_BASE_URL`, payment provider secrets, SMTP credentials, and admin secrets. Reuse the matching values from your local `.env`.
+- The default Blueprint uses `OTP_PROVIDER=DEV` with a fixed test code for APK testing. Switch that after you move beyond test flows.
+- Banner images and exchange receipt uploads are stored on the local filesystem. On Render's default ephemeral filesystem, those files disappear after a restart or redeploy. If you need them to persist, use a paid web service and uncomment the `disk` block in `render.yaml`.
+
 ## API endpoint reference (brief)
 All endpoints are prefixed with `/api`.
 

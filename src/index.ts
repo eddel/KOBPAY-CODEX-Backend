@@ -1,4 +1,3 @@
-import path from "path";
 import express, { type Request } from "express";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
@@ -27,6 +26,7 @@ import supportRoutes from "./routes/support.js";
 import bannerRoutes from "./routes/banners.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
+import { resolveUploadPath } from "./config/paths.js";
 import { logWarn, logInfo } from "./utils/logger.js";
 
 const app = express();
@@ -38,7 +38,7 @@ const corsOrigin = env.CORS_ORIGIN === "*"
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(
   "/uploads/banners",
-  express.static(path.join(process.cwd(), "uploads", "banners"))
+  express.static(resolveUploadPath("banners"))
 );
 app.use(
   express.json({
@@ -163,10 +163,8 @@ app.use((_req, res) => {
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || env.PORT || 4000;
-
-app.listen(PORT, "0.0.0.0", () => {
-  logInfo("server_started", { url: env.API_BASE_URL, port: PORT });
-  console.log(`KOBPAY API running on port ${PORT}`);
+app.listen(env.PORT, "0.0.0.0", () => {
+  logInfo("server_started", { url: env.API_BASE_URL, port: env.PORT });
+  console.log(`KOBPAY API running on ${env.API_BASE_URL}`);
 });
 

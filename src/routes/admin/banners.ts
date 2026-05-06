@@ -8,10 +8,11 @@ import { prisma } from "../../db.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { AppError, notFound } from "../../errors.js";
 import { env } from "../../config/env.js";
+import { resolveUploadPath } from "../../config/paths.js";
 
 const router = Router();
 
-const BANNERS_DIR = path.join(process.cwd(), "uploads", "banners");
+const BANNERS_DIR = resolveUploadPath("banners");
 const MAX_BANNER_BYTES = 5 * 1024 * 1024;
 
 const upload = multer({

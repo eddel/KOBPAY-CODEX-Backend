@@ -1,0 +1,103 @@
+services:
+  - type: web
+    name: kobpay-backend
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run prisma:generate && npm run build
+    preDeployCommand: npm run prisma:migrate:deploy
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kobpay-postgres
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: API_BASE_URL
+        sync: false
+      - key: OTP_PROVIDER
+        value: DEV
+      - key: DEV_OTP_FIXED_CODE
+        value: "123456"
+      - key: FLW_BASE_URL
+        value: https://api.flutterwave.com
+      - key: FLW_SECRET_KEY
+        sync: false
+      - key: FLW_WEBHOOK_SECRET
+        sync: false
+      - key: PAYSTACK_BASE_URL
+        value: https://api.paystack.co
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_WEBHOOK_SECRET
+        sync: false
+      - key: VTU_BASE_URL
+        value: https://vtuafrica.com.ng/portal/api
+      - key: VTU_API_KEY
+        sync: false
+      - key: VTU_WEBHOOK_URL
+        value: ""
+      - key: VTU_MODE
+        value: live
+      - key: VTU_VERIFY_URL
+        value: https://vtuafrica.com.ng/portal/api/merchant-verify/
+      - key: VTU_DOCS_BASE_URL
+        value: https://vtuafrica.com.ng/api
+      - key: VTU_CATALOG_CACHE_SECONDS
+        value: "3600"
+      - key: VTU_HTTP_TIMEOUT_MS
+        value: "15000"
+      - key: DATA_SUBSCRIPTION_FEE_NGN
+        value: "50"
+      - key: CABLE_SUBSCRIPTION_FEE_NGN
+        value: "200"
+      - key: ELECTRICITY_SUBSCRIPTION_FEE_NGN
+        value: "100"
+      - key: REEPLAY_GIFTCARD_BASE_URL
+        value: https://typescript.reeplay.app/api/v1
+      - key: REEPLAY_GIFTCARD_API_KEY
+        sync: false
+      - key: REEPLAY_EMAIL
+        sync: false
+      - key: REEPLAY_PASSWORD
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: KOBPAY <no-reply@kobpay.com>
+      - key: ADMIN_RECEIPT_EMAIL
+        value: kobpayhq@gmail.com
+      - key: ADMIN_EMAIL
+        value: admin@kobpay.local
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_API_KEY
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: UPLOADS_DIR
+        value: uploads
+    # For persistent banner/receipt uploads on a paid web service, add:
+    # disk:
+    #   name: kobpay-uploads
+    #   mountPath: /opt/render/project/src/uploads
+    #   sizeGB: 1
+
+databases:
+  - name: kobpay-postgres
+    plan: free
+    region: frankfurt
