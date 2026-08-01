@@ -227,7 +227,7 @@ const sendTrackSendMessage = async (
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${env.TRACKSEND_API_TOKEN.trim()}`
+        Authorization: env.TRACKSEND_API_TOKEN.trim()
       },
       body: JSON.stringify(payload),
       signal: controller.signal
