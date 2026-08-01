@@ -175,11 +175,23 @@ const normalizeTrackSendPhone = (phone: string) => {
   return trimmed.startsWith("+") ? trimmed.slice(1) : trimmed;
 };
 
-const parseJsonResponse = async <T>(response: Response, provider: string) => {
+type ParsedTrackSendResponse = {
+  json: TrackSendResponse | null;
+  text: string;
+};
+
+const parseTrackSendResponse = async (
+  response: Response
+): Promise<ParsedTrackSendResponse> => {
+  const text = await response.text();
+  if (!text.trim()) {
+    return { json: null, text: "" };
+  }
+
   try {
-    return (await response.json()) as T;
-  } catch (err) {
-    throw new AppError(502, `${provider} response not JSON`, `${provider}_SMS_ERROR`, err);
+    return { json: JSON.parse(text) as TrackSendResponse, text };
+  } catch (_) {
+    return { json: null, text };
   }
 };
 
@@ -229,15 +241,21 @@ const sendTrackSendMessage = async (
     clearTimeout(timeout);
   }
 
-  const body = await parseJsonResponse<TrackSendResponse>(response, "TRACKSEND");
-  const statusText = body?.status?.toLowerCase();
+  const body = await parseTrackSendResponse(response);
+  const statusText = body.json?.status?.toLowerCase();
   const accepted =
     response.ok &&
     (!statusText || ["success", "queued", "ok"].includes(statusText));
   if (!accepted) {
     const messageError =
-      body?.error?.message || body?.message || "TrackSend SMS failed";
-    throw new AppError(502, messageError, "TRACKSEND_SMS_ERROR", body);
+      body.json?.error?.message ||
+      body.json?.message ||
+      body.text.slice(0, 240) ||
+      "TrackSend SMS failed";
+    throw new AppError(502, messageError, "TRACKSEND_SMS_ERROR", {
+      status: response.status,
+      body: body.json ?? body.text
+    });
   }
 
   logInfo("sms_sent", {
@@ -245,8 +263,9 @@ const sendTrackSendMessage = async (
     phone,
     reference,
     senderId: getTrackSendSenderId(),
-    messageId: body?.data?.message_id ?? body?.data?.id,
-    commonId: body?.data?.common_id ?? body?.data?.commonId
+    response: body.json ? undefined : body.text.slice(0, 120),
+    messageId: body.json?.data?.message_id ?? body.json?.data?.id,
+    commonId: body.json?.data?.common_id ?? body.json?.data?.commonId
   });
 };
 
