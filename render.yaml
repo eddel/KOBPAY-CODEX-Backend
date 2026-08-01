@@ -25,6 +25,20 @@ services:
         value: DEV
       - key: DEV_OTP_FIXED_CODE
         value: "123456"
+      - key: SMS_FALLBACK_TO_DEV
+        value: "false"
+      - key: TRACKSEND_BASE_URL
+        value: https://api.tracksend.co
+      - key: TRACKSEND_LEGACY_BASE_URL
+        value: https://tx.tracksend.co
+      - key: TRACKSEND_API_TOKEN
+        sync: false
+      - key: TRACKSEND_SENDER_ID
+        value: Tracksend
+      - key: TRACKSEND_COUNTRY_ISO_CODE
+        value: NG
+      - key: TRACKSEND_CALLBACK_URL
+        sync: false
       - key: FLW_BASE_URL
         value: https://api.flutterwave.com
       - key: FLW_SECRET_KEY

@@ -22,6 +22,7 @@ import adminExchangeRoutes from "./routes/admin/exchangeTrades.js";
 import adminBannerRoutes from "./routes/admin/banners.js";
 import adminBannerUiRoutes from "./routes/admin/bannerUi.js";
 import adminUserRoutes from "./routes/admin/users.js";
+import adminSmsSettingsRoutes from "./routes/admin/smsSettings.js";
 import supportRoutes from "./routes/support.js";
 import bannerRoutes from "./routes/banners.js";
 import { authMiddleware } from "./middleware/auth.js";
@@ -145,6 +146,7 @@ app.use("/api/support", authMiddleware, supportRoutes);
 app.use("/api/admin/exchange/trades", adminExchangeRoutes);
 app.use("/api/admin/banners", adminBannerRoutes);
 app.use("/api/admin/users", adminUserRoutes);
+app.use("/api/admin/sms-settings", adminSmsSettingsRoutes);
 app.use("/admin/banners", adminBannerUiRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/webhooks", webhookRoutes);
@@ -167,4 +169,3 @@ app.listen(env.PORT, "0.0.0.0", () => {
   logInfo("server_started", { url: env.API_BASE_URL, port: env.PORT });
   console.log(`KOBPAY API running on ${env.API_BASE_URL}`);
 });
-

@@ -1,5 +1,7 @@
 import { env } from "../config/env.js";
 import { AppError } from "../errors.js";
+import { sendSmsMessage } from "./smsService.js";
+import { getActiveSmsProvider } from "./smsProviderSettings.js";
 
 const OTP_TTL_SECONDS = 300;
 
@@ -197,38 +199,46 @@ export const requestOtp = async (phoneRaw: string) => {
 
   incrementRateLimit(phone);
 
-  if (env.OTP_PROVIDER !== "DEV" && env.OTP_PROVIDER !== "BULKSMS") {
-    throw new AppError(501, "OTP provider not configured", "OTP_PROVIDER_MISSING");
-  }
-
-  let code = env.OTP_PROVIDER === "DEV" ? env.DEV_OTP_FIXED_CODE : generateRandomOtp();
+  const provider = await getActiveSmsProvider();
+  const isDevProvider = provider === "DEV";
+  let code = isDevProvider ? env.DEV_OTP_FIXED_CODE : generateRandomOtp();
   const expiresAt = Date.now() + OTP_TTL_SECONDS * 1000;
   const storedCode = normalizeOtpInput(code);
 
   otpStore.set(phone, { code: storedCode, expiresAt });
 
-  if (env.OTP_PROVIDER === "BULKSMS") {
+  if (!isDevProvider) {
     try {
-      await sendBulkSms(phone, code);
+      await sendSmsMessage({
+        phone,
+        message: buildOtpMessage(code),
+        reference: `otp-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`
+      });
     } catch (err) {
-      const allowFallback = env.BULKSMS_FALLBACK_TO_DEV && env.NODE_ENV !== "production";
+      const allowFallback =
+        (env.SMS_FALLBACK_TO_DEV || env.BULKSMS_FALLBACK_TO_DEV) &&
+        env.NODE_ENV !== "production";
       if (!allowFallback) {
         otpStore.delete(phone);
         throw err;
       }
 
-      console.warn("BulkSMS failed, falling back to DEV OTP", {
-        phone
+      console.warn("SMS provider failed, falling back to DEV OTP", {
+        provider,
+        phone,
+        error: err instanceof Error ? err.message : String(err)
       });
       code = env.DEV_OTP_FIXED_CODE;
       otpStore.set(phone, { code: normalizeOtpInput(code), expiresAt });
     }
   }
 
-  const allowFallback = env.BULKSMS_FALLBACK_TO_DEV && env.NODE_ENV !== "production";
+  const allowFallback =
+    (env.SMS_FALLBACK_TO_DEV || env.BULKSMS_FALLBACK_TO_DEV) &&
+    env.NODE_ENV !== "production";
   return {
     code:
-      env.OTP_PROVIDER === "DEV" || (env.OTP_PROVIDER === "BULKSMS" && allowFallback)
+      isDevProvider || (!isDevProvider && allowFallback)
         ? code
         : undefined,
     expiresAt: new Date(expiresAt).toISOString()

@@ -19,15 +19,22 @@ This document explains each environment variable and recommended dev values.
 - `JWT_REFRESH_TTL_SECONDS`: Default `2592000` (30 days).
 
 ## OTP Provider
-- `OTP_PROVIDER`: `DEV` or `BULKSMS`.
+- `OTP_PROVIDER`: `DEV`, `BULKSMS`, or `TRACKSEND`. This is the startup/default provider. The admin dashboard SMS tab can override the active provider in the database.
 - `DEV_OTP_FIXED_CODE`: Fixed OTP used in dev.
 - `OTP_RATE_LIMIT_WINDOW_SECONDS`: Rate-limit window for OTP requests.
 - `OTP_RATE_LIMIT_MAX_REQUESTS`: Max OTP requests per window.
+- `SMS_FALLBACK_TO_DEV`: When true (and not in production), fallback to DEV OTP if the active SMS provider fails.
 - `BULKSMS_BASE_URL`: Default `https://www.bulksmsnigeria.com/api/v2` (use sandbox `https://www.bulksmsnigeria.com/api/sandbox/v2` if needed).
 - `BULKSMS_API_TOKEN`: BulkSMS Nigeria API token.
 - `BULKSMS_SENDER_ID`: Sender ID (max 11 characters).
 - `BULKSMS_GATEWAY`: Optional gateway (`otp`, `direct-refund`, `direct-corporate`, `dual-backup`).
 - `BULKSMS_FALLBACK_TO_DEV`: When true (and not in production), fallback to DEV OTP if BulkSMS fails.
+- `TRACKSEND_BASE_URL`: New TrackSend API base URL. Default `https://api.tracksend.co`.
+- `TRACKSEND_LEGACY_BASE_URL`: Legacy TrackSend API base URL for status/history endpoints. Default `https://tx.tracksend.co`.
+- `TRACKSEND_API_TOKEN`: TrackSend API token.
+- `TRACKSEND_SENDER_ID`: TrackSend sender ID. Defaults to TrackSend's documented sender ID, `Tracksend`.
+- `TRACKSEND_COUNTRY_ISO_CODE`: Recipient country ISO code for TrackSend. Default `NG`.
+- `TRACKSEND_CALLBACK_URL`: Optional TrackSend delivery callback URL.
 - OTP endpoints are intended for signup only; login uses phone + password.
 
 ## Flutterwave (server-side only)

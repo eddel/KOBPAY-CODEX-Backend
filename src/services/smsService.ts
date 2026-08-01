@@ -1,6 +1,10 @@
 import { env } from "../config/env.js";
 import { AppError } from "../errors.js";
 import { logInfo, logWarn } from "../utils/logger.js";
+import {
+  getActiveSmsProvider,
+  type SmsProvider
+} from "./smsProviderSettings.js";
 
 type BulkSmsError = {
   message?: string;
@@ -23,6 +27,20 @@ type BulkSmsResponse = {
   message?: string;
   data?: BulkSmsData;
   error?: BulkSmsError;
+};
+
+type TrackSendResponse = {
+  status?: string;
+  message?: string;
+  data?: {
+    id?: string;
+    message_id?: string;
+    common_id?: string;
+    commonId?: string;
+  };
+  error?: {
+    message?: string;
+  };
 };
 
 const toBulkSmsNumber = (phone: string) => {
@@ -56,6 +74,24 @@ const isBulkSmsConfigured = () => {
   }
 
   return true;
+};
+
+export const getSmsProviderStatus = async () => {
+  const activeProvider = await getActiveSmsProvider();
+  return {
+    activeProvider,
+    providers: {
+      DEV: { configured: true, senderId: "DEV" },
+      BULKSMS: {
+        configured: isBulkSmsConfigured(),
+        senderId: env.BULKSMS_SENDER_ID.trim() || null
+      },
+      TRACKSEND: {
+        configured: isTrackSendConfigured(),
+        senderId: getTrackSendSenderId()
+      }
+    }
+  };
 };
 
 const sendBulkSmsMessage = async (phone: string, message: string, reference?: string) => {
@@ -122,15 +158,133 @@ const sendBulkSmsMessage = async (phone: string, message: string, reference?: st
   });
 };
 
+const isTrackSendConfigured = () => {
+  const apiToken = env.TRACKSEND_API_TOKEN?.trim();
+  if (!apiToken) {
+    return false;
+  }
+
+  const loweredToken = apiToken.toLowerCase();
+  return !loweredToken.includes("xxxx") && !loweredToken.includes("change");
+};
+
+const getTrackSendSenderId = () => env.TRACKSEND_SENDER_ID.trim() || "Tracksend";
+
+const normalizeTrackSendPhone = (phone: string) => {
+  const trimmed = phone.trim().replace(/\s+/g, "");
+  return trimmed.startsWith("+") ? trimmed.slice(1) : trimmed;
+};
+
+const parseJsonResponse = async <T>(response: Response, provider: string) => {
+  try {
+    return (await response.json()) as T;
+  } catch (err) {
+    throw new AppError(502, `${provider} response not JSON`, `${provider}_SMS_ERROR`, err);
+  }
+};
+
+const sendTrackSendMessage = async (
+  phone: string,
+  message: string,
+  reference?: string
+) => {
+  if (!isTrackSendConfigured()) {
+    throw new AppError(501, "TrackSend credentials missing", "SMS_PROVIDER_MISSING");
+  }
+
+  const baseUrl = env.TRACKSEND_BASE_URL.trim().replace(/\/+$/, "");
+  const url = `${baseUrl}/messaging/v1/sms`;
+  const payload: Record<string, unknown> = {
+    country_iso_code: env.TRACKSEND_COUNTRY_ISO_CODE.trim() || "NG",
+    from: getTrackSendSenderId(),
+    phone_numbers: [normalizeTrackSendPhone(phone)],
+    text: message
+  };
+
+  const callbackUrl = env.TRACKSEND_CALLBACK_URL.trim();
+  if (callbackUrl) {
+    payload.callback_url = callbackUrl;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12_000);
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${env.TRACKSEND_API_TOKEN.trim()}`
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      throw new AppError(504, "TrackSend SMS timed out", "TRACKSEND_SMS_TIMEOUT", err);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const body = await parseJsonResponse<TrackSendResponse>(response, "TRACKSEND");
+  const statusText = body?.status?.toLowerCase();
+  const accepted =
+    response.ok &&
+    (!statusText || ["success", "queued", "ok"].includes(statusText));
+  if (!accepted) {
+    const messageError =
+      body?.error?.message || body?.message || "TrackSend SMS failed";
+    throw new AppError(502, messageError, "TRACKSEND_SMS_ERROR", body);
+  }
+
+  logInfo("sms_sent", {
+    provider: "TRACKSEND",
+    phone,
+    reference,
+    senderId: getTrackSendSenderId(),
+    messageId: body?.data?.message_id ?? body?.data?.id,
+    commonId: body?.data?.common_id ?? body?.data?.commonId
+  });
+};
+
+const sendByProvider = async (
+  provider: SmsProvider,
+  phone: string,
+  message: string,
+  reference?: string
+) => {
+  if (provider === "BULKSMS") {
+    await sendBulkSmsMessage(phone, message, reference);
+    return;
+  }
+
+  if (provider === "TRACKSEND") {
+    await sendTrackSendMessage(phone, message, reference);
+  }
+};
+
 export const sendSmsMessage = async (input: {
   phone: string;
   message: string;
   reference?: string;
 }) => {
-  if (!isBulkSmsConfigured()) {
-    logWarn("sms_not_configured", { phone: input.phone });
+  const provider = await getActiveSmsProvider();
+  if (provider === "DEV") {
+    logInfo("sms_dev_mode", { phone: input.phone, reference: input.reference });
     return;
   }
 
-  await sendBulkSmsMessage(input.phone, input.message, input.reference);
+  try {
+    await sendByProvider(provider, input.phone, input.message, input.reference);
+  } catch (err) {
+    logWarn("sms_send_failed", {
+      provider,
+      phone: input.phone,
+      message: err instanceof Error ? err.message : String(err)
+    });
+    throw err;
+  }
 };

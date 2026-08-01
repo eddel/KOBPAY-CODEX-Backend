@@ -134,7 +134,7 @@ const page = `<!doctype html>
   <body>
     <header>
       <h1>KOBPAY Admin Console</h1>
-      <p>Banners + Exchange approvals + Users</p>
+      <p>Banners + Exchange approvals + Users + SMS</p>
     </header>
     <main>
       <section class="panel">
@@ -152,6 +152,7 @@ const page = `<!doctype html>
         <button class="tab-btn active" data-tab="banners">Banners</button>
         <button class="tab-btn" data-tab="exchange">Exchange</button>
         <button class="tab-btn" data-tab="users">Users</button>
+        <button class="tab-btn" data-tab="sms">SMS</button>
       </div>
 
       <div id="tab-banners" class="tab-panel active">
@@ -317,6 +318,42 @@ const page = `<!doctype html>
           </div>
         </section>
       </div>
+
+      <div id="tab-sms" class="tab-panel">
+        <section class="panel">
+          <div class="row" style="justify-content: space-between; align-items: flex-end;">
+            <div>
+              <h3 style="margin: 0;">SMS Provider</h3>
+              <div class="notice">Select the active provider for OTP and operational SMS.</div>
+            </div>
+            <button class="secondary" id="smsRefreshBtn">Refresh</button>
+          </div>
+          <div class="row" style="align-items: flex-end; margin-top: 16px;">
+            <div class="field" style="max-width: 260px;">
+              <label>Active Provider</label>
+              <select id="smsProvider">
+                <option value="DEV">DEV</option>
+                <option value="BULKSMS">BULKSMS</option>
+                <option value="TRACKSEND">TRACKSEND</option>
+              </select>
+            </div>
+            <button id="smsSaveBtn">Save Provider</button>
+            <span class="notice" id="smsStatusMsg"></span>
+          </div>
+          <div class="table-wrap" style="margin-top: 16px;">
+            <table id="smsProviderTable">
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Configured</th>
+                  <th>Sender ID</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </main>
 
     <script>
@@ -338,6 +375,10 @@ const page = `<!doctype html>
       const userTableBody = document.querySelector("#userTable tbody");
       const userLoadMoreBtn = document.getElementById("userLoadMoreBtn");
       const userLoadMoreStatus = document.getElementById("userLoadMoreStatus");
+
+      const smsProviderSelect = document.getElementById("smsProvider");
+      const smsStatusMsg = document.getElementById("smsStatusMsg");
+      const smsProviderTableBody = document.querySelector("#smsProviderTable tbody");
 
       let userNextCursor = null;
       let userLoading = false;
@@ -396,6 +437,59 @@ const page = `<!doctype html>
           return JSON.stringify(value ?? {}, null, 2);
         } catch (_) {
           return "{}";
+        }
+      };
+
+      const renderSmsSettings = async () => {
+        clearStatus(smsStatusMsg);
+        smsStatusMsg.textContent = "Loading...";
+        smsProviderTableBody.innerHTML = "";
+        try {
+          const resp = await fetch(apiBase + "/api/admin/sms-settings", {
+            headers: headers()
+          });
+          if (!resp.ok) {
+            throw new Error("Failed to load SMS settings (check admin key)");
+          }
+          const data = await resp.json();
+          smsProviderSelect.value = data.activeProvider || "DEV";
+          const providerStatus = data.providers || {};
+          for (const provider of Object.keys(providerStatus)) {
+            const row = document.createElement("tr");
+            const info = providerStatus[provider] || {};
+            row.innerHTML = \`
+              <td><strong>\${provider}</strong></td>
+              <td>\${info.configured ? "Yes" : "No"}</td>
+              <td>\${info.senderId || "-"}</td>
+            \`;
+            smsProviderTableBody.appendChild(row);
+          }
+          smsStatusMsg.textContent = "Loaded";
+        } catch (err) {
+          showError(smsStatusMsg, err);
+        }
+      };
+
+      const saveSmsSettings = async () => {
+        clearStatus(smsStatusMsg);
+        smsStatusMsg.textContent = "Saving...";
+        try {
+          const resp = await fetch(apiBase + "/api/admin/sms-settings", {
+            method: "PATCH",
+            headers: {
+              ...headers(),
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ activeProvider: smsProviderSelect.value })
+          });
+          if (!resp.ok) {
+            const body = await resp.json().catch(() => null);
+            throw new Error(body?.error?.message || "Failed to save SMS settings");
+          }
+          smsStatusMsg.textContent = "Saved";
+          await renderSmsSettings();
+        } catch (err) {
+          showError(smsStatusMsg, err);
         }
       };
 
@@ -1074,6 +1168,9 @@ const page = `<!doctype html>
         if (tab === "users") {
           renderUsers();
         }
+        if (tab === "sms") {
+          renderSmsSettings();
+        }
       };
 
       document.getElementById("saveKey").addEventListener("click", saveKey);
@@ -1087,6 +1184,8 @@ const page = `<!doctype html>
       userStatusFilter.addEventListener("change", () => renderUsers());
       userLimitSelect.addEventListener("change", () => renderUsers());
       userLoadMoreBtn.addEventListener("click", () => renderUsers({ append: true }));
+      document.getElementById("smsRefreshBtn").addEventListener("click", renderSmsSettings);
+      document.getElementById("smsSaveBtn").addEventListener("click", saveSmsSettings);
       userSearchInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           renderUsers();
